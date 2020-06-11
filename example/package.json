@@ -1,0 +1,11 @@
+{
+  "name": "elm-apexcharts-link-example",
+  "version": "1.0.0",
+  "description": "example of how to use the elm-apexcharts-link package",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "leojpod",
+  "license": "MIT"
+}
