@@ -4,8 +4,12 @@
   "description": "example of how to use the elm-apexcharts-link package",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "elm-live src/Main.elm  --port=${PORT:-8080} -- --output=elm.js"
   },
   "author": "leojpod",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "elm-format": "^0.8.3",
+    "elm-live": "^4.0.2"
+  }
 }
