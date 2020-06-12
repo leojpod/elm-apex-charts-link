@@ -1,13 +1,14 @@
 module Main exposing (main)
 
 import Browser
+import Html.Attributes exposing (class)
 import Html exposing (Html, div)
 import Platform exposing (Program)
 
 
 type alias Model =
-    { stuff : ()
-    , stoff : ()
+    { data1 : ()
+    , data2 : ()
     }
 
 
@@ -27,8 +28,8 @@ main =
 
 init : () -> ( Model, Cmd Msg )
 init () =
-    ( { stuff = ()
-      , stoff = ()
+    ( { data1 = ()
+      , data2 = ()
       }
     , Cmd.none
     )
@@ -36,7 +37,7 @@ init () =
 
 view : Model -> Html Msg
 view _ =
-    div [ class "" ] []
+    div [ class "container" ] [] []
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
