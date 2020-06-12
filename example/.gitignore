@@ -1,0 +1,4 @@
+# hide the build file
+elm.js
+# hide the node stuff
+node_modules/ 
