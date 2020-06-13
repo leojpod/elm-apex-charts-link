@@ -1,10 +1,13 @@
-module Example exposing (..)
+module Example exposing (suite)
 
-import Expect exposing (Expectation)
-import Fuzz exposing (Fuzzer, int, list, string)
-import Test exposing (..)
+-- exposing (Expectation)
+-- import Fuzz exposing (Fuzzer, int, list, string)
+
+import Expect
+import Test exposing (Test, describe, test)
 
 
 suite : Test
 suite =
-    todo "Implement our first test. See https://package.elm-lang.org/packages/elm-explorations/test/latest for how to do this!"
+    describe "Basic examples"
+        [ test "simple points" <| \_ -> Test.todo "not done yet" ]
