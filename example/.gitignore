@@ -1,4 +1,4 @@
 # hide the build file
-elm.js
+src/elm.js
 # hide the node stuff
 node_modules/ 
