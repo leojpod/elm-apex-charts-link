@@ -10,6 +10,7 @@
   "license": "MIT",
   "dependencies": {
     "elm-format": "^0.8.3",
-    "elm-live": "^4.0.2"
+    "elm-live": "^4.0.2",
+    "standard": "^14.3.4"
   }
 }
