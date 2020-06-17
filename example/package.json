@@ -4,7 +4,7 @@
   "description": "example of how to use the elm-apexcharts-link package",
   "main": "index.js",
   "scripts": {
-    "start": "elm-live src/Main.elm  --port=${PORT:-8080} -- --output=elm.js"
+    "start": "elm-live src/Main.elm --start-page=src/index.html  --port=${PORT:-8080} -- --output=src/elm.js"
   },
   "author": "leojpod",
   "license": "MIT",
