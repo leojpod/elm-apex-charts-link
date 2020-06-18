@@ -4,21 +4,25 @@
   "description": "example of how to use the elm-apexcharts-link package",
   "main": "index.js",
   "scripts": {
-    "start": "elm-live src/Main.elm --start-page=src/index.html  --port=${PORT:-8080} -- --output=src/elm.js"
+    "start": "parcel src/index.html"
   },
   "author": "leojpod",
   "license": "MIT",
   "dependencies": {
+    "@webcomponents/custom-elements": "^1.4.1",
+    "apexcharts": "^3.19.2",
     "elm-format": "^0.8.3",
-    "elm-live": "^4.0.2",
     "standard": "^14.3.4"
   },
   "devDependencies": {
+    "elm-hot": "^1.1.4",
     "eslint": "^7.2.0",
     "eslint-config-standard": "^14.1.1",
     "eslint-plugin-import": "^2.21.2",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^4.2.1",
-    "eslint-plugin-standard": "^4.0.1"
+    "eslint-plugin-standard": "^4.0.1",
+    "node-elm-compiler": "^5.0.4",
+    "parcel-bundler": "^1.12.4"
   }
 }

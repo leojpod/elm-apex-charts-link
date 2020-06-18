@@ -2,3 +2,7 @@
 src/elm.js
 # hide the node stuff
 node_modules/ 
+
+# hide parcel stuff
+.cache/
+dist/

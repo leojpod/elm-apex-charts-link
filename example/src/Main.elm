@@ -31,13 +31,13 @@ fictiveLogins : Time.Zone -> Time.Posix -> List Login
 fictiveLogins zone now =
     [ { user = "Jane doe", date = now, os = Linux, place = "Home" }
     , { user = "Jane doe", date = Time.Extra.add Time.Extra.Hour -2 zone now, os = Linux, place = "Home" }
-    , { user = "Jane doe", date = Time.Extra.add Time.Extra.Hour -8 zone now, os = Linux, place = "Home" }
+    , { user = "Jane doe", date = Time.Extra.add Time.Extra.Week -2 zone now, os = Linux, place = "Home" }
     , { user = "Jane doe", date = Time.Extra.add Time.Extra.Day -2 zone now, os = Linux, place = "Office" }
-    , { user = "Jane doe", date = Time.Extra.add Time.Extra.Hour -3 zone <| Time.Extra.add Time.Extra.Day -3 zone now, os = Linux, place = "Office" }
+    , { user = "Jane doe", date = Time.Extra.add Time.Extra.Hour -3 zone <| Time.Extra.add Time.Extra.Day -6 zone now, os = Linux, place = "Office" }
     , { user = "Jon doe", date = Time.Extra.add Time.Extra.Hour 3 zone <| Time.Extra.add Time.Extra.Day -3 zone now, os = Linux, place = "Office" }
     , { user = "Jon doe", date = Time.Extra.add Time.Extra.Hour 3 zone <| Time.Extra.add Time.Extra.Day -2 zone now, os = Linux, place = "Commuting" }
-    , { user = "Jon doe", date = Time.Extra.add Time.Extra.Hour 3 zone <| Time.Extra.add Time.Extra.Day -3 zone now, os = Linux, place = "Commuting" }
-    , { user = "Jon doe", date = Time.Extra.add Time.Extra.Hour 3 zone <| Time.Extra.add Time.Extra.Day -3 zone now, os = Linux, place = "Home" }
+    , { user = "Jon doe", date = Time.Extra.add Time.Extra.Hour 3 zone <| Time.Extra.add Time.Extra.Day -9 zone now, os = Linux, place = "Commuting" }
+    , { user = "Jon doe", date = Time.Extra.add Time.Extra.Hour 3 zone <| Time.Extra.add Time.Extra.Day -9 zone now, os = Linux, place = "Home" }
     , { user = "Jon doe", date = Time.Extra.add Time.Extra.Hour 3 zone <| Time.Extra.add Time.Extra.Day -3 zone now, os = Linux, place = "Home" }
     ]
 
@@ -70,13 +70,17 @@ init () =
 view : Model -> Html Msg
 view _ =
     div [ class "container flex flex-col" ]
-        [ div [ id "chart1" ] []
-        , div [ id "chart2" ] []
+        [ div [ class "w-1/2 mx-auto" ]
+            [ div [ id "chart1", class "bg-gray-400 min-h-64" ] []
+            ]
+        , div [ class "w-1/2" ]
+            [ div [ id "chart2", class "bg-gray-400 min-h-64" ] []
+            ]
         ]
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+update msg _ =
     case msg of
         LoadFakeLogins now ->
             let
@@ -86,7 +90,7 @@ update msg model =
             ( logins
             , updateChart <|
                 Apex.encodeChart <|
-                    Apex.LineChart <|
+                    Apex.LineChart "Connections by week" <|
                         connectionsByWeek logins
             )
 
@@ -96,12 +100,15 @@ connectionsByWeek =
     List.Extra.gatherEqualsBy (.date >> Time.Extra.floor Time.Extra.Week Time.utc)
         >> List.map
             (\( head, list ) ->
-                { x = head.date |> Time.Extra.floor Time.Extra.Week Time.utc
-                |> Time.posixToMillis 
-                |> toFloat
+                { x =
+                    head.date
+                        |> Time.Extra.floor Time.Extra.Week Time.utc
+                        |> Time.posixToMillis
+                        |> toFloat
                 , y = (head :: list) |> List.length |> toFloat
                 }
             )
+        >> List.sortBy .x
 
 
 subscriptions : Model -> Sub Msg

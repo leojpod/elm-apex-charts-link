@@ -22,19 +22,20 @@ type alias Point =
 
 
 type ChartDefinition subject
-    = LineChart (List Point)
+    = LineChart String (List Point)
 
 
 encodeChart : ChartDefinition subject -> Json.Encode.Value
 encodeChart definition =
     case definition of
-        LineChart points ->
+        LineChart serieName points ->
             Json.Encode.object
                 [ ( "series"
                   , Json.Encode.list
                         (\serie ->
                             Json.Encode.object
-                                [ ( "data"
+                                [ ( "name", Json.Encode.string serieName )
+                                , ( "data"
                                   , Json.Encode.list
                                         (\{ x, y } ->
                                             Json.Encode.object
