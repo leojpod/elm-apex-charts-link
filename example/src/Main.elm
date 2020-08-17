@@ -66,18 +66,27 @@ init () =
     , Time.now |> Task.perform LoadFakeLogins
     )
 
-
 view : Model -> Html Msg
-view _ =
-    div [ class "container flex flex-col min-h-screen" ]
+view logins =
+    div [ class "container flex flex-col" ]
         [ div [ class "w-1/2 mx-auto" ]
-            [ div [ id "chart1", class "bg-gray-400 min-h-64" ] []
+            [ div [ id "chart1", class "bg-gray-400 min-h-64" ]
+                [ div [] []
+                ]
             ]
-            , div [ class "flex flex-col flex-grow" ] [
-              div [ class "w-full h-8 bg-red-400" ][]
-            ]
-        , div [ class "w-1/2" ]
-            [ div [ id "chart2", class "bg-gray-400 min-h-64" ] []
+        , div [ class "flex flex-col flex-grow" ] [
+          div [ class "w-full h-8 bg-red-400" ][]
+        ]
+        , div [ class "w-1/2 mx-auto" ]
+            [ Html.node "apex-chart"
+                [ Html.Attributes.property "data" <|
+                    Apex.encodeChart <|
+                  Debug.log "stuff" <|
+                        Apex.LineChart "Connections by hour of the day" <|
+                            connectionsByHourOfTheDay logins
+                , class "bg-gray-400 min-h-64"
+                ]
+                []
             ]
         ]
 
@@ -137,23 +146,3 @@ subscriptions _ =
 port updateChart : Json.Encode.Value -> Cmd msg
 
 
-view : Model -> Html Msg
-view logins =
-    div [ class "container flex flex-col" ]
-        [ div [ class "w-1/2 mx-auto" ]
-            [ div [ id "chart1", class "bg-gray-400 min-h-64" ]
-                [ div [] []
-                ]
-            ]
-        , div [ class "w-1/2 mx-auto" ]
-            [ Html.node "apex-chart"
-                [ Html.Attributes.property "data" <|
-                    Apex.encodeChart <|
-                        Apex.LineChart "Connections by week" <|
-                            connectionsByHourOfTheDay <|
-                                Debug.log "logins " logins
-                , class "bg-gray-400 min-h-64"
-                ]
-                []
-            ]
-        ]

@@ -1,8 +1,10 @@
-# hide the build file
-src/elm.js
-# hide the node stuff
-node_modules/ 
+# elm-package generated files
+elm-stuff
+# elm-repl generated files
+repl-temp-*
 
-# hide parcel stuff
-.cache/
+# node stuff
+node_modules/
+
 dist/
+.cache

@@ -1,90 +1,93 @@
-import { Elm } from './Main.elm'
+import { Elm } from "./Main.elm";
 // this is a parcel issue it seems (https://github.com/apexcharts/apexcharts.js/issues/1393)
 //   |
 //   V
-import ApexCharts from 'apexcharts/dist/apexcharts.common'
-import '@webcomponents/custom-elements'
+import ApexCharts from "apexcharts/dist/apexcharts.common";
+import "@webcomponents/custom-elements";
 
-const app = Elm.Main.init({ node: document.getElementById('my-app') })
+const app = Elm.Main.init({ node: document.getElementById("my-app") });
 
 // APEX CHART ZONE
 app.ports.updateChart.subscribe((data) => {
   const options = {
     series: data.series,
     noData: {
-      text: 'loading'
+      text: "loading",
     },
     chart: {
-    // height: 350,
-      width: '100%',
-      type: 'line',
+      // height: 350,
+      width: "100%",
+      type: "line",
       toolbar: { show: false },
-      zoom: { enabled: false }
+      zoom: { enabled: false },
     },
     dataLabels: {
-      enabled: false
+      enabled: false,
     },
     stroke: {
-      curve: 'smooth'
+      curve: "smooth",
     },
     xaxis: {
-      type: 'datetime'
+      type: "datetime",
     },
     grid: {
       show: false,
-      padding: { left: 0, right: 0, top: 0 }
+      padding: { left: 0, right: 0, top: 0 },
     },
     legend: {
-      show: false
-    }
-  }
-  const chart = new ApexCharts(document.querySelector('#chart1'), options)
-  chart.render()
-})
+      show: false,
+    },
+  };
+  const chart = new ApexCharts(document.querySelector("#chart1"), options);
+  chart.render();
+});
 
 class ApexChart extends HTMLElement {
-  connectedCallback () {
-    console.log('connection -> ', this.data)
+  connectedCallback() {
+    console.log("connection -> ", this.data);
     const options = {
       series: this.data.series,
       noData: {
-        text: 'loading'
+        text: "loading",
       },
       chart: {
         // height: 350,
-        width: '100%',
-        type: 'line',
+        width: "100%",
+        type: "line",
         toolbar: { show: false },
-        zoom: { enabled: false }
+        zoom: { enabled: false },
       },
       dataLabels: {
-        enabled: false
+        enabled: false,
       },
       stroke: {
-        curve: 'smooth'
+        curve: "smooth",
       },
       xaxis: {
-        type: 'datetime'
+        type: "datetime",
       },
       grid: {
         show: false,
-        padding: { left: 0, right: 0, top: 0 }
+        padding: { left: 0, right: 0, top: 0 },
       },
       legend: {
-        show: false
-      }
-    }
-    const chartElement = document.createElement('div')
-    this.appendChild(chartElement)
-    this.chart = new ApexCharts(chartElement, options)
-    this.chart.render()
+        show: false,
+      },
+    };
+    const chartElement = document.createElement("div");
+    this.appendChild(chartElement);
+    this.chart = new ApexCharts(chartElement, options);
+    this.chart.render();
+  }
+  static get observedAttributes() {
+    return ["data"];
   }
 
-  attributeChangedCallback () {
-    console.log('you call me I call you')
-    this.chart.updateSeries(this.data.series)
+  attributeChangedCallback() {
+    console.log("you call me I call you");
+    this.chart.updateSeries(this.data.series);
   }
 
-  disconnectCallback () {}
+  disconnectCallback() {}
 }
-customElements.define('apex-chart', ApexChart)
+customElements.define("apex-chart", ApexChart);
