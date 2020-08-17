@@ -113,6 +113,21 @@ connectionsByWeek =
             )
         >> List.sortBy .x
 
+connectionsByHourOfTheDay : List Login -> List Apex.Point
+connectionsByHourOfTheDay =
+    List.Extra.gatherEqualsBy (.date >> Time.Extra.floor Time.Extra.Week Time.utc)
+        >> List.map
+            (\( head, list ) ->
+                { x =
+                    head.date
+                        |> Time.Extra.floor Time.Extra.Week Time.utc
+                        |> Time.posixToMillis
+                        |> toFloat
+                , y = (head :: list) |> List.length |> toFloat
+                }
+            )
+        >> List.sortBy .x
+
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
@@ -120,3 +135,25 @@ subscriptions _ =
 
 
 port updateChart : Json.Encode.Value -> Cmd msg
+
+
+view : Model -> Html Msg
+view logins =
+    div [ class "container flex flex-col" ]
+        [ div [ class "w-1/2 mx-auto" ]
+            [ div [ id "chart1", class "bg-gray-400 min-h-64" ]
+                [ div [] []
+                ]
+            ]
+        , div [ class "w-1/2 mx-auto" ]
+            [ Html.node "apex-chart"
+                [ Html.Attributes.property "data" <|
+                    Apex.encodeChart <|
+                        Apex.LineChart "Connections by week" <|
+                            connectionsByHourOfTheDay <|
+                                Debug.log "logins " logins
+                , class "bg-gray-400 min-h-64"
+                ]
+                []
+            ]
+        ]
