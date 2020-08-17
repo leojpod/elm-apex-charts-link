@@ -69,9 +69,12 @@ init () =
 
 view : Model -> Html Msg
 view _ =
-    div [ class "container flex flex-col" ]
+    div [ class "container flex flex-col min-h-screen" ]
         [ div [ class "w-1/2 mx-auto" ]
             [ div [ id "chart1", class "bg-gray-400 min-h-64" ] []
+            ]
+            , div [ class "flex flex-col flex-grow" ] [
+              div [ class "w-full h-8 bg-red-400" ][]
             ]
         , div [ class "w-1/2" ]
             [ div [ id "chart2", class "bg-gray-400 min-h-64" ] []
