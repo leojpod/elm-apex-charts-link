@@ -66,6 +66,7 @@ init () =
     , Time.now |> Task.perform LoadFakeLogins
     )
 
+
 view : Model -> Html Msg
 view logins =
     div [ class "container flex flex-col" ]
@@ -74,16 +75,16 @@ view logins =
                 [ div [] []
                 ]
             ]
-        , div [ class "flex flex-col flex-grow" ] [
-          div [ class "w-full h-8 bg-red-400" ][]
-        ]
+        , div [ class "flex flex-col flex-grow" ]
+            [ div [ class "w-full h-8 bg-red-400" ] []
+            ]
         , div [ class "w-1/2 mx-auto" ]
             [ Html.node "apex-chart"
                 [ Html.Attributes.property "data" <|
                     Apex.encodeChart <|
-                  Debug.log "stuff" <|
-                        Apex.LineChart "Connections by hour of the day" <|
-                            connectionsByHourOfTheDay logins
+                        Debug.log "stuff" <|
+                            Apex.LineChart "Connections by hour of the day" <|
+                                connectionsByHourOfTheDay logins
                 , class "bg-gray-400 min-h-64"
                 ]
                 []
@@ -122,6 +123,7 @@ connectionsByWeek =
             )
         >> List.sortBy .x
 
+
 connectionsByHourOfTheDay : List Login -> List Apex.Point
 connectionsByHourOfTheDay =
     List.Extra.gatherEqualsBy (.date >> Time.Extra.floor Time.Extra.Week Time.utc)
@@ -144,5 +146,3 @@ subscriptions _ =
 
 
 port updateChart : Json.Encode.Value -> Cmd msg
-
-
