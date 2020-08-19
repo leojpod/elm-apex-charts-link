@@ -76,16 +76,14 @@ view logins =
                 ]
             ]
         , div [ class "flex flex-col flex-grow" ]
-            [ div [ class "w-full h-8 bg-red-400" ] []
+            [ div [ class "w-full h-8" ] []
             ]
         , div [ class "w-1/2 mx-auto" ]
             [ Html.node "apex-chart"
                 [ Html.Attributes.property "data" <|
                     Apex.encodeChart <|
-                        Debug.log "stuff" <|
-                            Apex.LineChart "Connections by hour of the day" <|
-                                connectionsByHourOfTheDay logins
-                , class "bg-gray-400 min-h-64"
+                        Apex.LineChart "Connections by hour of the day" <|
+                            connectionsByHourOfTheDay logins
                 ]
                 []
             ]
@@ -126,13 +124,12 @@ connectionsByWeek =
 
 connectionsByHourOfTheDay : List Login -> List Apex.Point
 connectionsByHourOfTheDay =
-    List.Extra.gatherEqualsBy (.date >> Time.Extra.floor Time.Extra.Week Time.utc)
+    List.Extra.gatherEqualsBy (.date >> Time.toHour Time.utc)
         >> List.map
             (\( head, list ) ->
                 { x =
                     head.date
-                        |> Time.Extra.floor Time.Extra.Week Time.utc
-                        |> Time.posixToMillis
+                        |> Time.toHour Time.utc
                         |> toFloat
                 , y = (head :: list) |> List.length |> toFloat
                 }
