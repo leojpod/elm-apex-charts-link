@@ -82,8 +82,12 @@ view logins =
             [ Html.node "apex-chart"
                 [ Html.Attributes.property "data" <|
                     Apex.encodeChart <|
-                        Apex.LineChart "Connections by hour of the day" <|
-                            connectionsByHourOfTheDay logins
+                        (Apex.chart
+                            |> Apex.addLineSeries "Connections by week" (connectionsByWeek logins)
+                            |> Apex.addColumnSeries "Connections within office hour for that week" (dayTimeConnectionByWeek logins)
+                            |> Apex.addColumnSeries "Connections outside office hour for that week" (outsideOfficeHourConnectionByWeek logins)
+                            |> Apex.withXAxisType Apex.DateTime
+                        )
                 ]
                 []
             ]
@@ -101,8 +105,12 @@ update msg _ =
             ( logins
             , updateChart <|
                 Apex.encodeChart <|
-                    Apex.LineChart "Connections by week" <|
-                        connectionsByWeek logins
+                    (Apex.chart
+                        |> Apex.addLineSeries "Connections by week" (connectionsByWeek logins)
+                        |> Apex.addColumnSeries "Connections within office hour for that week" (dayTimeConnectionByWeek logins)
+                        |> Apex.addColumnSeries "Connections outside office hour for that week" (outsideOfficeHourConnectionByWeek logins)
+                        |> Apex.withXAxisType Apex.DateTime
+                    )
             )
 
 
@@ -117,6 +125,46 @@ connectionsByWeek =
                         |> Time.posixToMillis
                         |> toFloat
                 , y = (head :: list) |> List.length |> toFloat
+                }
+            )
+        >> List.sortBy .x
+
+
+dayTimeConnectionByWeek : List Login -> List Apex.Point
+dayTimeConnectionByWeek =
+    List.Extra.gatherEqualsBy (.date >> Time.Extra.floor Time.Extra.Week Time.utc)
+        >> List.map
+            (\( head, list ) ->
+                { x =
+                    head.date
+                        |> Time.Extra.floor Time.Extra.Week Time.utc
+                        |> Time.posixToMillis
+                        |> toFloat
+                , y =
+                    (head :: list)
+                        |> List.filter (.date >> Time.toHour Time.utc >> (\h -> h >= 8 && h < 18))
+                        |> List.length
+                        |> toFloat
+                }
+            )
+        >> List.sortBy .x
+
+
+outsideOfficeHourConnectionByWeek : List Login -> List Apex.Point
+outsideOfficeHourConnectionByWeek =
+    List.Extra.gatherEqualsBy (.date >> Time.Extra.floor Time.Extra.Week Time.utc)
+        >> List.map
+            (\( head, list ) ->
+                { x =
+                    head.date
+                        |> Time.Extra.floor Time.Extra.Week Time.utc
+                        |> Time.posixToMillis
+                        |> toFloat
+                , y =
+                    (head :: list)
+                        |> List.filter (.date >> Time.toHour Time.utc >> (\h -> h < 8 && h >= 18))
+                        |> List.length
+                        |> toFloat
                 }
             )
         >> List.sortBy .x

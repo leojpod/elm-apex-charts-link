@@ -1,7 +1,14 @@
 module Apex exposing
     ( ChartDefinition(..)
     , Point
+    , XAxisType(..)
+    , addColumnSeries
+    , addLineSeries
+    , chart
     , encodeChart
+    , encodeChart_
+    , withLegends
+    , withXAxisType
     )
 
 import Json.Encode
@@ -25,8 +32,8 @@ type ChartDefinition subject
     = LineChart String (List Point)
 
 
-encodeChart : ChartDefinition subject -> Json.Encode.Value
-encodeChart definition =
+encodeChart_ : ChartDefinition subject -> Json.Encode.Value
+encodeChart_ definition =
     case definition of
         LineChart serieName points ->
             Json.Encode.object
@@ -65,8 +72,21 @@ type alias ChartSeries =
 
 
 type Series
-    = SingleValue (List Float)
-    | PairedValue (List Point)
+    = Single String SingleSeriesData
+    | Paired String PairedSeriesType PairedSeriesData
+
+
+type alias SingleSeriesData =
+    List Float
+
+
+type alias PairedSeriesData =
+    List Point
+
+
+type PairedSeriesType
+    = Lines
+    | Columns
 
 
 type alias Options =
@@ -79,6 +99,7 @@ type alias Options =
     , stroke : StokeOptions
     , grid : GridOptions
     , legend : LegendOptions
+    , xAxis : XAxisOptions
     }
 
 
@@ -88,6 +109,9 @@ defaultOptions =
     , chart = defaultChartOptions
     , dataLabels = False
     , stroke = defaultStrokeOptions
+    , grid = defaultGridOptions
+    , legend = defaultLegendOptions
+    , xAxis = defaultXAxisOptions
     }
 
 
@@ -125,11 +149,172 @@ type alias GridOptions =
     Bool
 
 
+defaultGridOptions : GridOptions
+defaultGridOptions =
+    False
+
+
+type alias LegendOptions =
+    Bool
+
+
+defaultLegendOptions : GridOptions
+defaultLegendOptions =
+    False
+
+
+type alias XAxisOptions =
+    XAxisType
+
+
+type XAxisType
+    = Category
+    | DateTime
+    | Numeric
+
+
+defaultXAxisOptions : XAxisOptions
+defaultXAxisOptions =
+    defaultXAxisType
+
+
+defaultXAxisType : XAxisType
+defaultXAxisType =
+    Numeric
+
+
 chart : Chart
 chart =
     Chart []
         defaultOptions
 
 
-type alias LegendOptions =
-    Bool
+addLineSeries : String -> PairedSeriesData -> Chart -> Chart
+addLineSeries name series (Chart allSeries options) =
+    Chart (Paired name Lines series :: allSeries) options
+
+
+addColumnSeries : String -> PairedSeriesData -> Chart -> Chart
+addColumnSeries name series (Chart allSeries options) =
+    Chart (Paired name Columns series :: allSeries) options
+
+
+withLegends : Bool -> Chart -> Chart
+withLegends bool (Chart allSeries options) =
+    Chart allSeries { options | legend = bool }
+
+
+withXAxisType : XAxisType -> Chart -> Chart
+withXAxisType type_ (Chart allSeries options) =
+    Chart allSeries { options | xAxis = type_ }
+
+
+encodeChart : Chart -> Json.Encode.Value
+encodeChart (Chart allSeries options) =
+    Json.Encode.object
+        [ ( "series"
+          , Json.Encode.list encodeSeries allSeries
+          )
+        , ( "noData", Json.Encode.object [ ( "text", Json.Encode.string options.noData ) ] )
+        , ( "chart"
+          , encodeChartOptions options.chart
+          )
+        , ( "dataLabels", Json.Encode.object [ ( "enabled", Json.Encode.bool options.dataLabels ) ] )
+        , ( "stroke", encodeStrokeOptions options.stroke )
+        , ( "grid", encodeGridOptions options.grid )
+        , ( "legend", encodeLegendOptions options.legend )
+        , ( "xaxis", encodeXAxisOptions options.xAxis )
+        ]
+
+
+encodeSeries : Series -> Json.Encode.Value
+encodeSeries series =
+    case series of
+        Single name data ->
+            Json.Encode.object
+                [ ( "name", Json.Encode.string name )
+                , ( "data"
+                  , Json.Encode.list Json.Encode.float data
+                  )
+                ]
+
+        Paired name type_ dataPoints ->
+            Json.Encode.object
+                [ ( "name", Json.Encode.string name )
+                , ( "type"
+                  , case type_ of
+                        Lines ->
+                            Json.Encode.string "line"
+
+                        Columns ->
+                            Json.Encode.string "column"
+                  )
+                , ( "data"
+                  , Json.Encode.list encodePoint dataPoints
+                  )
+                ]
+
+
+encodePoint : Point -> Json.Encode.Value
+encodePoint { x, y } =
+    Json.Encode.object [ ( "x", Json.Encode.float x ), ( "y", Json.Encode.float y ) ]
+
+
+encodeStrokeOptions : StokeOptions -> Json.Encode.Value
+encodeStrokeOptions { curve, show, width } =
+    Json.Encode.object
+        [ ( "curve", Json.Encode.string curve )
+        , ( "show", Json.Encode.bool show )
+        , ( "width", Json.Encode.int width )
+        ]
+
+
+encodeGridOptions : GridOptions -> Json.Encode.Value
+encodeGridOptions show =
+    if show then
+        Json.Encode.object []
+
+    else
+        Json.Encode.object
+            [ ( "show", Json.Encode.bool False )
+            , ( "padding"
+              , Json.Encode.object
+                    [ ( "left", Json.Encode.int 0 )
+                    , ( "right", Json.Encode.int 0 )
+                    , ( "top", Json.Encode.int 0 )
+                    ]
+              )
+            ]
+
+
+encodeLegendOptions : LegendOptions -> Json.Encode.Value
+encodeLegendOptions show =
+    Json.Encode.object [ ( "show", Json.Encode.bool show ) ]
+
+
+encodeChartOptions : ChartOptions -> Json.Encode.Value
+encodeChartOptions { type_, toolbar, zoom } =
+    Json.Encode.object
+        [ ( "width", Json.Encode.string "100%" )
+        , ( "type", type_ |> Maybe.withDefault "line" |> Json.Encode.string )
+        , ( "toolbar", Json.Encode.object [ ( "show", Json.Encode.bool toolbar ) ] )
+        , ( "zoom", Json.Encode.object [ ( "enabled", Json.Encode.bool zoom ) ] )
+        ]
+
+
+encodeXAxisOptions : XAxisOptions -> Json.Encode.Value
+encodeXAxisOptions type_ =
+    Json.Encode.object
+        [ ( "type"
+          , Json.Encode.string <|
+                case type_ of
+                    Category ->
+                        "category"
+
+                    DateTime ->
+                        "datetime"
+
+                    Numeric ->
+                        "numeric"
+          )
+        ]
