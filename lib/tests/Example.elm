@@ -2,8 +2,8 @@ module Example exposing (suite)
 
 -- exposing (Expectation)
 -- import Fuzz exposing (Fuzzer, int, list, string)
+-- import Expect
 
-import Expect
 import Test exposing (Test, describe, test)
 
 

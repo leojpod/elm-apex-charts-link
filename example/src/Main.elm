@@ -79,16 +79,14 @@ view logins =
             [ div [ class "w-full h-8" ] []
             ]
         , div [ class "w-1/2 mx-auto" ]
-            [ Html.node "apex-chart"
-                [ Html.Attributes.property "data" <|
-                    Apex.encodeChart <|
-                        (Apex.chart
-                            |> Apex.addLineSeries "Connections by week" (connectionsByWeek logins)
-                            |> Apex.addColumnSeries "Connections within office hour for that week" (dayTimeConnectionByWeek logins)
-                            |> Apex.addColumnSeries "Connections outside office hour for that week" (outsideOfficeHourConnectionByWeek logins)
-                            |> Apex.withXAxisType Apex.DateTime
-                        )
-                ]
+            [ Apex.apexChart
+                (Apex.chart
+                    |> Apex.addLineSeries "Connections by week" (connectionsByWeek logins)
+                    |> Apex.addColumnSeries "Connections within office hour for that week" (dayTimeConnectionByWeek logins)
+                    |> Apex.addColumnSeries "Connections outside office hour for that week" (outsideOfficeHourConnectionByWeek logins)
+                    |> Apex.withXAxisType Apex.DateTime
+                )
+                []
                 []
             ]
         ]
