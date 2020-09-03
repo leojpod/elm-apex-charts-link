@@ -30,6 +30,6 @@ This package offers 2 ways of plugging your data to an actual chart: via ports o
 
 The first options is achieve by providing a JSON encoder for the charts (see [`Apex.encodeChart`](Apex#encodeChart)).
 
-The second requires to import and setup the npm companion package: [put the url here](), once you've set it up you can use the [`Apex.apexChart`](Apex#apexChart).
+The second requires to import and setup the npm companion package: [elm-apex-charts-link](https://www.npmjs.com/package/elm-apex-charts-link), once you've set it up you can use the [`Apex.apexChart`](Apex#apexChart).
 
 For a complete example, have a look at [`/example`](https://github.com/leojpod/elm-apex-charts-link/tree/master/example).
