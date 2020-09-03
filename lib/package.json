@@ -3,10 +3,9 @@
   "version": "1.0.0",
   "description": "write your charts specifications in elm, export to json and use it via ports or web-components",
   "main": "index.js",
-  "directories": {
-    "example": "example",
-    "test": "tests"
-  },
+  "files": [
+    "/src/*.js"
+  ],
   "dependencies": {
     "apexcharts": "^3.20.0"
   },
@@ -28,7 +27,7 @@
     "url": "git+https://github.com/leojpod/elm-apex-charts-link.git"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/leojpod/elm-apex-charts-link/issues"
   },

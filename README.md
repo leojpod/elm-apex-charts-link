@@ -1,30 +1,35 @@
 # Apex link
 
-*an tentative solution to using apex charts within the comfort of elm*
+*a tentative solution to using apex charts within the comfort of elm*
 
 ## Design decisions
 
 ### the targeted solution
 
-I would like to find something that allows to write things piece by piece.
-A bit like what `Json.Decode.Extra` provides. 
+I wanted to get an easy way to "describe" how the charts should look like and defer the transformation from the "graph description" to the actual Apex JSON to a custom encoder.
 
-The code could look a bit like: 
+At the moment the code looks like this: 
 
 ```elm
-baseChart 
-  |> withLegends -- here goes the legend configuration options
-  |> addSeries -- here goes the definitions for a scatter plot with lines
-  |> addSeries -- here goes the definitions for an histogram to be placed behind the line series
-  |> Apex.encodeChart
+Apex.chart
+    |> Apex.addLineSeries "Connections by week" (connectionsByWeek logins)
+    |> Apex.addColumnSeries "Connections within office hour for that week" (dayTimeConnectionByWeek logins)
+    |> Apex.addColumnSeries "Connections outside office hour for that week" (outsideOfficeHourConnectionByWeek logins)
+    |> Apex.withXAxisType Apex.DateTime
+
 ```
 
-An idea would be to offer different entry points: `lineChart`, `radar`, ... Which yields a parametrised version of  a type `Chart serieType` which will in turns parametrised the `withLegends`, `withSomething` and `addSeries` functions.
-
-Another thing that would be good is to have helper to transform data into series but that's something for later
+It it still pretty much just a WIP and needs to support more options and more types of charts to be more complete.
+However it is working fine already as it is.
 
 
 ### How to plug it
 
-Once we've got a nicely encoded JSON what shall you do with it? 
-This package should offer/offers 2 ways of plugging your data to a chart: via ports or via custom-elements.
+Once we've got a nice chart description what shall we do with it? 
+This package offers 2 ways of plugging your data to an actual chart: via ports or via a custom-elements.
+
+The first options is achieve by providing a JSON encoder for the charts (see [`Apex.encodeChart`](Apex#encodeChart)).
+
+The second requires to import and setup the npm companion package: [put the url here](), once you've set it up you can use the [`Apex.apexChart`](Apex#apexChart).
+
+For a complete example, have a look at [`/example`](https://github.com/leojpod/elm-apex-charts-link/tree/master/example).
