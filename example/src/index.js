@@ -4,7 +4,7 @@ import { Elm } from "./Main.elm";
 //   V
 import ApexCharts from "apexcharts/dist/apexcharts.common";
 import "@webcomponents/custom-elements";
-import "../../src/apex-chart-element";
+import "apex-chart-element";
 
 const app = Elm.Main.init({ node: document.getElementById("my-app") });
 
