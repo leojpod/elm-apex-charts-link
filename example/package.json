@@ -4,13 +4,15 @@
   "description": "example of how to use the elm-apexcharts-link package",
   "main": "index.js",
   "scripts": {
-    "start": "parcel src/index.html"
+    "start": "parcel src/index.html",
+    "build": "parcel build src/index.html"
   },
   "author": "leojpod",
   "license": "MIT",
   "dependencies": {
     "@webcomponents/custom-elements": "^1.4.2",
     "apexcharts": "^3.20.0",
+    "elm-apex-charts-link": "file:..",
     "elm-format": "^0.8.3",
     "standard": "^14.3.4"
   },
