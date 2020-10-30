@@ -26,6 +26,7 @@ jobs:
       - name: Build the example
         run: |
           cd example
+          npm i 
           parcel build src/index.html
       
       # Deploy the example to github page
