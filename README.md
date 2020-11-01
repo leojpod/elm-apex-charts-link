@@ -1,5 +1,7 @@
 # Apex link
 
+![CI](https://github.com/leojpod/elm-apex-charts-link/workflows/CI/badge.svg?branch=master)
+
 *a tentative solution to using apex charts within the comfort of elm*
 
 ## Design decisions
