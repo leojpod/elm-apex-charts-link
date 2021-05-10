@@ -1190,7 +1190,7 @@ anymatch@^2.0.0:
     micromatch "^3.1.4"
     normalize-path "^2.1.1"
 
-apexcharts@^3.22.0, apexcharts@^3.24.0:
+apexcharts@^3.24.0, apexcharts@^3.26.1:
   version "3.26.1"
   resolved "https://registry.yarnpkg.com/apexcharts/-/apexcharts-3.26.1.tgz#2094ec0cfd00ed8129d93e73e75018716d55ef5b"
   integrity sha512-Z/pfGTsL4YUm1tHd6a0d0G2hX4XUmhEI0b/5BxVK69dEB/XXvVMX9hKCkcIx+kPyVqVFCuo91ZjCdqjMcmSVBA==
@@ -2471,7 +2471,7 @@ elliptic@^6.5.3:
   version "1.0.1"
   dependencies:
     "@webcomponents/custom-elements" "^1.4.3"
-    apexcharts "^3.22.0"
+    apexcharts "^3.26.1"
 
 elm-format@^0.8.3:
   version "0.8.5"

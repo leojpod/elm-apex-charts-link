@@ -2,6 +2,7 @@ port module Main exposing (main)
 
 import Apex
 import Browser
+import FakeData
 import Html exposing (Html, div)
 import Html.Attributes exposing (class, id)
 import Json.Encode
@@ -9,7 +10,6 @@ import List.Extra
 import Platform exposing (Program)
 import Task
 import Time
-import FakeData
 import Time.Extra
 
 
@@ -35,7 +35,10 @@ fictiveLogins zone now =
     , { user = "Jane doe", date = Time.Extra.add Time.Extra.Week -2 zone now, os = Linux, place = "Home" }
     , { user = "Jane doe", date = Time.Extra.add Time.Extra.Day -2 zone now, os = Linux, place = "Office" }
     , { user = "Jane doe"
-    , date = Time.Extra.add Time.Extra.Hour -3 zone <| Time.Extra.add Time.Extra.Day -6 zone now, os = Linux, place = "Office" }
+      , date = Time.Extra.add Time.Extra.Hour -3 zone <| Time.Extra.add Time.Extra.Day -6 zone now
+      , os = Linux
+      , place = "Office"
+      }
     , { user = "Jon doe", date = Time.Extra.add Time.Extra.Hour 3 zone <| Time.Extra.add Time.Extra.Day -3 zone now, os = Linux, place = "Office" }
     , { user = "Jon doe", date = Time.Extra.add Time.Extra.Hour 3 zone <| Time.Extra.add Time.Extra.Day -2 zone now, os = Linux, place = "Commuting" }
     , { user = "Jon doe", date = Time.Extra.add Time.Extra.Hour 3 zone <| Time.Extra.add Time.Extra.Day -9 zone now, os = Linux, place = "Commuting" }
@@ -45,11 +48,16 @@ fictiveLogins zone now =
 
 
 type alias Model =
-    List Login
+    { logins :
+        List Login
+    , yearlyUsage : List FakeData.Usage
+    }
 
 
 type Msg
     = LoadFakeLogins Time.Posix
+    | UpdateNow Time.Posix
+    | LoadYearlyUsage (List FakeData.Usage)
 
 
 main : Program () Model Msg
@@ -64,66 +72,35 @@ main =
 
 init : () -> ( Model, Cmd Msg )
 init () =
-    ( []
-    , Time.now |> Task.perform LoadFakeLogins
+    ( { logins = [], yearlyUsage = [] }
+    , Cmd.batch
+        [ Time.now |> Task.perform LoadFakeLogins
+        , Time.now |> Task.perform UpdateNow
+        ]
     )
 
 
-view : Model -> Html Msg
-view logins =
-    let 
-        defaultChart = 
-                (Apex.chart
-                    |> Apex.addLineSeries "Connections by week" (connectionsByWeek logins)
-                    |> Apex.addColumnSeries "Connections within office hour for that week" (dayTimeConnectionByWeek logins)
-                    |> Apex.addColumnSeries "Connections outside office hour for that week" (outsideOfficeHourConnectionByWeek logins)
-                    |> Apex.withXAxisType Apex.DateTime
-                )
-    in
-    div [ class "container grid grid-cols-1 gap-4 md:grid-cols-3" ]
-    [ div [id "chart1", class "col-span-1 md:col-span-3"] [ div []  []]
-    , Apex.apexChart defaultChart [ class "col-span-1 md:col-span-2" ] []
-    , Apex.apexChart defaultChart [ class "col-span-1" ] []
-    , Apex.apexChart defaultChart [ class "col-span-1" ] []
-    ]
-    {--[ div [ class "w-1/2 mx-auto" ]
-            [ div [ id "chart1", class "bg-gray-400 min-h-64" ]
-                [ div [] []
-                ]
-            ]
-        , div [ class "flex flex-col flex-grow" ]
-            [ div [ class "w-full h-8" ] []
-            ]
-        , div [ class "w-1/2 mx-auto" ]
-            [ Apex.apexChart
-                (Apex.chart
-                    |> Apex.addLineSeries "Connections by week" (connectionsByWeek logins)
-                    |> Apex.addColumnSeries "Connections within office hour for that week" (dayTimeConnectionByWeek logins)
-                    |> Apex.addColumnSeries "Connections outside office hour for that week" (outsideOfficeHourConnectionByWeek logins)
-                    |> Apex.withXAxisType Apex.DateTime
-                )
-                []
-                []
-            ]
-        ]
-        -}
-
-
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg _ =
+update msg model =
     case msg of
         LoadFakeLogins now ->
             let
                 logins =
                     fictiveLogins Time.utc now
             in
-            ( logins
+            ( { model | logins = logins }
+            , Cmd.none
+            )
+
+        UpdateNow now ->
+            ( model, FakeData.fakeYearlyUsage Time.utc now LoadYearlyUsage )
+
+        LoadYearlyUsage usages ->
+            ( { model | yearlyUsage = usages }
             , updateChart <|
                 Apex.encodeChart <|
                     (Apex.chart
-                        |> Apex.addLineSeries "Connections by week" (connectionsByWeek logins)
-                        |> Apex.addColumnSeries "Connections within office hour for that week" (dayTimeConnectionByWeek logins)
-                        |> Apex.addColumnSeries "Connections outside office hour for that week" (outsideOfficeHourConnectionByWeek logins)
+                        |> Apex.addColumnSeries "Time used" (usagesByMonth usages)
                         |> Apex.withXAxisType Apex.DateTime
                     )
             )
@@ -137,6 +114,22 @@ connectionsByWeek =
                 { x =
                     head.date
                         |> Time.Extra.floor Time.Extra.Week Time.utc
+                        |> Time.posixToMillis
+                        |> toFloat
+                , y = (head :: list) |> List.length |> toFloat
+                }
+            )
+        >> List.sortBy .x
+
+
+usagesByMonth : List FakeData.Usage -> List Apex.Point
+usagesByMonth =
+    List.Extra.gatherEqualsBy (Time.Extra.floor Time.Extra.Month Time.utc)
+        >> List.map
+            (\( head, list ) ->
+                { x =
+                    head
+                        |> Time.Extra.floor Time.Extra.Month Time.utc
                         |> Time.posixToMillis
                         |> toFloat
                 , y = (head :: list) |> List.length |> toFloat
@@ -206,3 +199,45 @@ subscriptions _ =
 
 
 port updateChart : Json.Encode.Value -> Cmd msg
+
+
+view : Model -> Html Msg
+view { logins } =
+    let
+        defaultChart =
+            Apex.chart
+                |> Apex.addLineSeries "Connections by week" (connectionsByWeek logins)
+                |> Apex.addColumnSeries "Connections within office hour for that week" (dayTimeConnectionByWeek logins)
+                |> Apex.addColumnSeries "Connections outside office hour for that week" (outsideOfficeHourConnectionByWeek logins)
+                |> Apex.withXAxisType Apex.DateTime
+    in
+    div [ class "container grid grid-cols-1 gap-4 md:grid-cols-3" ]
+        [ div [ id "chart1", class "col-span-1 md:col-span-3" ] [ div [] [] ]
+        , Apex.apexChart defaultChart [ class "col-span-1 md:col-span-2" ] []
+        , Apex.apexChart defaultChart [ class "col-span-1" ] []
+        , Apex.apexChart defaultChart [ class "col-span-1" ] []
+        ]
+
+
+
+{--[ div [ class "w-1/2 mx-auto" ]
+            [ div [ id "chart1", class "bg-gray-400 min-h-64" ]
+                [ div [] []
+                ]
+            ]
+        , div [ class "flex flex-col flex-grow" ]
+            [ div [ class "w-full h-8" ] []
+            ]
+        , div [ class "w-1/2 mx-auto" ]
+            [ Apex.apexChart
+                (Apex.chart
+                    |> Apex.addLineSeries "Connections by week" (connectionsByWeek logins)
+                    |> Apex.addColumnSeries "Connections within office hour for that week" (dayTimeConnectionByWeek logins)
+                    |> Apex.addColumnSeries "Connections outside office hour for that week" (outsideOfficeHourConnectionByWeek logins)
+                    |> Apex.withXAxisType Apex.DateTime
+                )
+                []
+                []
+            ]
+        ]
+-}
