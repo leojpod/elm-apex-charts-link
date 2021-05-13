@@ -3,7 +3,7 @@ port module Main exposing (main)
 import Apex
 import Browser
 import FakeData
-import Html exposing (Html, div)
+import Html exposing (Html, div, h1, text)
 import Html.Attributes exposing (class, id)
 import Json.Encode
 import List.Extra
@@ -51,7 +51,7 @@ type alias Model =
     { logins :
         List Login
     , yearlyUsage : List FakeData.Usage
-    , stateReport: FakeData.StateReport
+    , stateReport : FakeData.StateReport
     }
 
 
@@ -59,7 +59,7 @@ type Msg
     = LoadFakeLogins Time.Posix
     | UpdateNow Time.Posix
     | LoadYearlyUsage (List FakeData.Usage)
-    | LoadStateReport (FakeData.StateReport)
+    | LoadStateReport FakeData.StateReport
 
 
 main : Program () Model Msg
@@ -74,8 +74,10 @@ main =
 
 init : () -> ( Model, Cmd Msg )
 init () =
-    ( { logins = [], yearlyUsage = [] 
-    , stateReport = FakeData.StateReport 0 0 0 }
+    ( { logins = []
+      , yearlyUsage = []
+      , stateReport = FakeData.StateReport 0 0 0
+      }
     , Cmd.batch
         [ Time.now |> Task.perform LoadFakeLogins
         , Time.now |> Task.perform UpdateNow
@@ -108,8 +110,9 @@ update msg model =
                         |> Apex.withXAxisType Apex.DateTime
                     )
             )
-        LoadStateReport stateReport -> 
-            ({model | stateReport = stateReport}, Cmd.none)
+
+        LoadStateReport stateReport ->
+            ( { model | stateReport = stateReport }, Cmd.none )
 
 
 connectionsByWeek : List Login -> List Apex.Point
@@ -219,34 +222,21 @@ view { logins, stateReport } =
     in
     div [ class "container grid grid-cols-1 gap-4 md:grid-cols-3" ]
         [ div [ id "chart1", class "col-span-1 md:col-span-3" ] [ div [] [] ]
-        , Apex.apexChart (
-            Apex.chart
-            |> Apex.makePie "State" stateReport
-            ) [ class "col-span-1 md:col-span-2" ] []
-        , Apex.apexChart defaultChart [ class "col-span-1" ] []
-        , Apex.apexChart defaultChart [ class "col-span-1" ] []
-        ]
-
-
-
-{--[ div [ class "w-1/2 mx-auto" ]
-            [ div [ id "chart1", class "bg-gray-400 min-h-64" ]
-                [ div [] []
+        , Apex.apexChart
+            (Apex.makePie "State"
+                [ ( "working", stateReport.working |> toFloat )
+                , ( "meeh", stateReport.meeh |> toFloat )
+                , ( "not working", stateReport.notWorking |> toFloat )
                 ]
+            )
+            [ class "col-span-1 md:col-span-2" ]
+            []
+        , div [ class "flex flex-col items-center" ]
+        [ div [ class "flex flex-col items-center justify-center w-56 h-56 bg-red-400 rounded-full" ] [
+            h1 [  class "text-xl font-bold text-white"][ text "56 " ],
+            h1 [ class "font-bold text-gray-200 text-l" ] [ text "incidents" ]
             ]
-        , div [ class "flex flex-col flex-grow" ]
-            [ div [ class "w-full h-8" ] []
+            , Apex.apexChart defaultChart [ class "col-span-1" ] []
             ]
-        , div [ class "w-1/2 mx-auto" ]
-            [ Apex.apexChart
-                (Apex.chart
-                    |> Apex.addLineSeries "Connections by week" (connectionsByWeek logins)
-                    |> Apex.addColumnSeries "Connections within office hour for that week" (dayTimeConnectionByWeek logins)
-                    |> Apex.addColumnSeries "Connections outside office hour for that week" (outsideOfficeHourConnectionByWeek logins)
-                    |> Apex.withXAxisType Apex.DateTime
-                )
-                []
-                []
-            ]
+        , Apex.apexChart defaultChart [ class "col-span-1" ] []
         ]
--}

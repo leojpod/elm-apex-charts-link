@@ -158,6 +158,7 @@ type
     Chart
     -- TODO maybe add something like "FinalChart" which prevent to continue chaining stuff
     = Chart ChartSeries Options
+    | SingleSeriesChart String SingleSeriesData Options
 
 
 {-| might be over zealous on the alias type but well...
@@ -202,6 +203,13 @@ type alias Options =
     , legend : LegendOptions
     , xAxis : XAxisOptions
     }
+mapOptions: (Options -> Options) -> Chart -> Chart
+mapOptions mapFct chartDefinition = 
+    case chartDefinition of 
+        SingleSeriesChart name series options -> 
+            SingleSeriesChart name series <| mapFct options
+        Chart series options -> 
+            Chart series <| mapFct options
 
 
 defaultOptions : Options
@@ -334,47 +342,50 @@ chart =
 {-| as the name suggest, this add a line to your chart by creating a series with the given name and by linking the given points together.
 -}
 addLineSeries : String -> List Point -> Chart -> Chart
-addLineSeries name series (Chart allSeries options) =
-    let
-        chartOptions =
-            options.chart
-    in
-    Chart (Paired name Lines series :: allSeries)
-        { options
-            | chart =
-                { chartOptions
-                    | type_ = setInferedType "line" chartOptions.type_
+addLineSeries name series chartDefinition = 
+    case chartDefinition of 
+        SingleSeriesChart _ _ _ -> chartDefinition
+        Chart allSeries options -> 
+            let
+                chartOptions =
+                    options.chart
+            in
+            Chart (Paired name Lines series :: allSeries)
+                { options
+                    | chart =
+                        { chartOptions
+                            | type_ = setInferedType "line" chartOptions.type_
+                        }
                 }
-        }
 
 
 {-| as the name suggest, this add a new column series to your chart using the given name and by adding a bar for each of the given points.
 -}
 addColumnSeries : String -> List Point -> Chart -> Chart
-addColumnSeries name series (Chart allSeries options) =
-    let
-        chartOptions =
-            options.chart
-    in
-    Chart (Paired name Columns series :: allSeries)
-        { options
-            | chart =
-                { chartOptions
-                    | type_ = setInferedType "bar" chartOptions.type_
+addColumnSeries name series chartDefinition = 
+    case chartDefinition of 
+        SingleSeriesChart _ _ _ -> chartDefinition
+        (Chart allSeries options) ->
+            let
+                chartOptions =
+                    options.chart
+            in
+            Chart (Paired name Columns series :: allSeries)
+                { options
+                    | chart =
+                        { chartOptions
+                            | type_ = setInferedType "bar" chartOptions.type_
+                        }
                 }
-        }
 
 
-makePie : String -> List ( String, Float ) -> Chart -> Chart
-makePie name serie (Chart _ options) =
-    let
-        chartOptions =
-            options.chart
-    in
-    Chart [ Single name serie ]
-        { options
+makePie : String -> List ( String, Float ) -> Chart
+makePie name labelledData =
+    SingleSeriesChart name
+        labelledData
+        { defaultOptions
             | chart =
-                { chartOptions | type_ = Set "pie" }
+                { defaultChartOptions | type_ = Set "pie" }
         }
 
 
@@ -383,34 +394,34 @@ makePie name serie (Chart _ options) =
 
 
 setChartType : Maybe String -> Chart -> Chart
-setChartType maybeString (Chart series options) =
-    let
-        chartOptions =
-            options.chart
-    in
-    Chart series
-        { options
-            | chart =
-                { chartOptions
-                    | type_ =
-                        -- TODO change that stuff at some point
-                        Set <| Maybe.withDefault "" maybeString
-                }
-        }
-
+setChartType maybeString  = 
+    mapOptions 
+        (\options -> 
+            let
+                chartOptions =
+                    options.chart
+            in
+                { options
+                    | chart =
+                        { chartOptions
+                            | type_ =
+                                -- TODO change that stuff at some point
+                                Set <| Maybe.withDefault "" maybeString
+                        }
+                })
 
 {-| Allow to turn on or off the legend for the graph
 -}
 withLegends : Bool -> Chart -> Chart
-withLegends bool (Chart allSeries options) =
-    Chart allSeries { options | legend = bool }
+withLegends bool  =
+    mapOptions ( \options ->  { options | legend = bool })
 
 
 {-| change the type of x-axis used in you graph
 -}
 withXAxisType : XAxisType -> Chart -> Chart
-withXAxisType type_ (Chart allSeries options) =
-    Chart allSeries { options | xAxis = type_ }
+withXAxisType type_  =
+    mapOptions  (\options -> { options | xAxis = type_ })
 
 
 
@@ -423,45 +434,58 @@ NOTE: if you are using the custom-element version you should not need to use thi
 
 -}
 encodeChart : Chart -> Json.Encode.Value
-encodeChart (Chart allSeries options) =
+encodeChart chartDefinition =
+    case chartDefinition of
+        Chart series options ->
+            encodeChart_ series options
+
+        SingleSeriesChart name series options ->
+            encodeSingleSeriesChart name series options
+
+
+encodeChart_ : ChartSeries -> Options -> Json.Encode.Value
+encodeChart_ allSeries options =
     Json.Encode.object <|
-        [ ( "series"
-          , Json.Encode.list encodeSeries allSeries
+        (( "series", Json.Encode.list encodeSeries allSeries )
+            :: encodeEachOptions options
+        )
+
+
+encodeSingleSeriesChart : String -> SingleSeriesData -> Options -> Json.Encode.Value
+encodeSingleSeriesChart _ series options =
+    Json.Encode.object <|
+        [ ( "labels"
+          , Json.Encode.list Json.Encode.string <|
+                Tuple.first <|
+                    List.unzip series
           )
-        , ( "noData", Json.Encode.object [ ( "text", Json.Encode.string options.noData ) ] )
-        , ( "chart"
-          , encodeChartOptions options.chart
+        , ( "series"
+          , Json.Encode.list Json.Encode.float <|
+                Tuple.second <|
+                    List.unzip series
           )
-        , ( "dataLabels", Json.Encode.object [ ( "enabled", Json.Encode.bool options.dataLabels ) ] )
-        , ( "stroke", encodeStrokeOptions options.stroke )
-        , ( "grid", encodeGridOptions options.grid )
-        , ( "legend", encodeLegendOptions options.legend )
-        , ( "xaxis", encodeXAxisOptions options.xAxis )
         ]
-            ++ List.filterMap identity
-                [ allSeries
-                    |> List.filterMap
-                        (\serie ->
-                            case serie of
-                                Single _ data ->
-                                    List.unzip data |> Tuple.first |> Just
+            ++ encodeEachOptions options
 
-                                _ ->
-                                    Nothing
-                        )
-                    |> List.head
-                    |> Maybe.map (\labels -> ("labels", ))
 
-                ]
+encodeEachOptions : Options -> List ( String, Json.Encode.Value )
+encodeEachOptions options =
+    [ ( "noData", Json.Encode.object [ ( "text", Json.Encode.string options.noData ) ] )
+    , ( "chart", encodeChartOptions options.chart )
+    , ( "dataLabels", Json.Encode.object [ ( "enabled", Json.Encode.bool options.dataLabels ) ] )
+    , ( "stroke", encodeStrokeOptions options.stroke )
+    , ( "grid", encodeGridOptions options.grid )
+    , ( "legend", encodeLegendOptions options.legend )
+    , ( "xaxis", encodeXAxisOptions options.xAxis )
+    ]
 
 
 encodeSeries : Series -> Json.Encode.Value
 encodeSeries series =
     case series of
-        Single name data ->
+        Single _ data ->
             Json.Encode.object
-                [ ( "name", Json.Encode.string name )
-                , ( "data"
+                [ ( "data"
                   , Json.Encode.list Json.Encode.float <|
                         Tuple.second <|
                             List.unzip data
