@@ -213,8 +213,40 @@ defaultOptions =
     }
 
 
+type ChartType
+    = Unset
+    | Infered String
+    | Set String
+
+
+setInferedType : String -> ChartType -> ChartType
+setInferedType inferedType chartType =
+    case chartType of
+        Unset ->
+            Infered inferedType
+
+        Infered _ ->
+            Infered inferedType
+
+        _ ->
+            chartType
+
+
+chartTypeWithDefault : String -> ChartType -> String
+chartTypeWithDefault default chartType =
+    case chartType of
+        Unset ->
+            default
+
+        Infered type_ ->
+            type_
+
+        Set type_ ->
+            type_
+
+
 type alias ChartOptions =
-    { type_ : Maybe String
+    { type_ : ChartType
     , toolbar : Bool
     , zoom : Bool
     }
@@ -222,7 +254,7 @@ type alias ChartOptions =
 
 defaultChartOptions : ChartOptions
 defaultChartOptions =
-    { type_ = Nothing
+    { type_ = Unset
     , toolbar = False
     , zoom = False
     }
@@ -300,14 +332,34 @@ chart =
 -}
 addLineSeries : String -> List Point -> Chart -> Chart
 addLineSeries name series (Chart allSeries options) =
-    Chart (Paired name Lines series :: allSeries) options
+    let
+        chartOptions =
+            options.chart
+    in
+    Chart (Paired name Lines series :: allSeries)
+        { options
+            | chart =
+                { chartOptions
+                    | type_ = setInferedType "line" chartOptions.type_
+                }
+        }
 
 
 {-| as the name suggest, this add a new column series to your chart using the given name and by adding a bar for each of the given points.
 -}
 addColumnSeries : String -> List Point -> Chart -> Chart
 addColumnSeries name series (Chart allSeries options) =
-    Chart (Paired name Columns series :: allSeries) options
+    let
+        chartOptions =
+            options.chart
+    in
+    Chart (Paired name Columns series :: allSeries)
+        { options
+            | chart =
+                { chartOptions
+                    | type_ = setInferedType "bar" chartOptions.type_
+                }
+        }
 
 
 {-| Allow to turn on or off the legend for the graph
@@ -416,7 +468,7 @@ encodeChartOptions : ChartOptions -> Json.Encode.Value
 encodeChartOptions { type_, toolbar, zoom } =
     Json.Encode.object
         [ ( "width", Json.Encode.string "100%" )
-        , ( "type", type_ |> Maybe.withDefault "line" |> Json.Encode.string )
+        , ( "type", type_ |> chartTypeWithDefault "line" |> Json.Encode.string )
         , ( "toolbar", Json.Encode.object [ ( "show", Json.Encode.bool toolbar ) ] )
         , ( "zoom", Json.Encode.object [ ( "enabled", Json.Encode.bool zoom ) ] )
         ]
