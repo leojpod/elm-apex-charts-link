@@ -51,6 +51,7 @@ type alias Model =
     { logins :
         List Login
     , yearlyUsage : List FakeData.Usage
+    , stateReport: FakeData.StateReport
     }
 
 
@@ -58,6 +59,7 @@ type Msg
     = LoadFakeLogins Time.Posix
     | UpdateNow Time.Posix
     | LoadYearlyUsage (List FakeData.Usage)
+    | LoadStateReport (FakeData.StateReport)
 
 
 main : Program () Model Msg
@@ -72,10 +74,12 @@ main =
 
 init : () -> ( Model, Cmd Msg )
 init () =
-    ( { logins = [], yearlyUsage = [] }
+    ( { logins = [], yearlyUsage = [] 
+    , stateReport = FakeData.StateReport 0 0 0 }
     , Cmd.batch
         [ Time.now |> Task.perform LoadFakeLogins
         , Time.now |> Task.perform UpdateNow
+        , FakeData.fakeStateReport LoadStateReport
         ]
     )
 
@@ -104,6 +108,8 @@ update msg model =
                         |> Apex.withXAxisType Apex.DateTime
                     )
             )
+        LoadStateReport stateReport -> 
+            ({model | stateReport = stateReport}, Cmd.none)
 
 
 connectionsByWeek : List Login -> List Apex.Point
@@ -202,7 +208,7 @@ port updateChart : Json.Encode.Value -> Cmd msg
 
 
 view : Model -> Html Msg
-view { logins } =
+view { logins, stateReport } =
     let
         defaultChart =
             Apex.chart
@@ -213,7 +219,10 @@ view { logins } =
     in
     div [ class "container grid grid-cols-1 gap-4 md:grid-cols-3" ]
         [ div [ id "chart1", class "col-span-1 md:col-span-3" ] [ div [] [] ]
-        , Apex.apexChart defaultChart [ class "col-span-1 md:col-span-2" ] []
+        , Apex.apexChart (
+            Apex.chart
+            |> Apex.makePie "State" stateReport
+            ) [ class "col-span-1 md:col-span-2" ] []
         , Apex.apexChart defaultChart [ class "col-span-1" ] []
         , Apex.apexChart defaultChart [ class "col-span-1" ] []
         ]

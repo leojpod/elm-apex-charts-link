@@ -8,6 +8,7 @@ module Apex exposing
     , XAxisType(..)
     , encodeChart
     , apexChart
+    , makePie, setChartType
     )
 
 {-| This package provide a (WIP) integration between elm and [Apex charts](https://apexcharts.com/) via either custom-element or ports.
@@ -153,7 +154,9 @@ type alias Point =
 
 {-| This is an internal type to make sure we're keeping the definitions and list handling coherent and free from outside manipulation
 -}
-type Chart
+type
+    Chart
+    -- TODO maybe add something like "FinalChart" which prevent to continue chaining stuff
     = Chart ChartSeries Options
 
 
@@ -175,7 +178,7 @@ type Series
 
 
 type alias SingleSeriesData =
-    List Float
+    List ( String, Float )
 
 
 type alias PairedSeriesData =
@@ -362,6 +365,40 @@ addColumnSeries name series (Chart allSeries options) =
         }
 
 
+makePie : String -> List ( String, Float ) -> Chart -> Chart
+makePie name serie (Chart _ options) =
+    let
+        chartOptions =
+            options.chart
+    in
+    Chart [ Single name serie ]
+        { options
+            | chart =
+                { chartOptions | type_ = Set "pie" }
+        }
+
+
+
+{--cosmetic things --}
+
+
+setChartType : Maybe String -> Chart -> Chart
+setChartType maybeString (Chart series options) =
+    let
+        chartOptions =
+            options.chart
+    in
+    Chart series
+        { options
+            | chart =
+                { chartOptions
+                    | type_ =
+                        -- TODO change that stuff at some point
+                        Set <| Maybe.withDefault "" maybeString
+                }
+        }
+
+
 {-| Allow to turn on or off the legend for the graph
 -}
 withLegends : Bool -> Chart -> Chart
@@ -376,6 +413,10 @@ withXAxisType type_ (Chart allSeries options) =
     Chart allSeries { options | xAxis = type_ }
 
 
+
+{--Encoding part --}
+
+
 {-| this function takes a chart and turns it into JSON data that Apex Charts can understand
 
 NOTE: if you are using the custom-element version you should not need to use this function
@@ -383,7 +424,7 @@ NOTE: if you are using the custom-element version you should not need to use thi
 -}
 encodeChart : Chart -> Json.Encode.Value
 encodeChart (Chart allSeries options) =
-    Json.Encode.object
+    Json.Encode.object <|
         [ ( "series"
           , Json.Encode.list encodeSeries allSeries
           )
@@ -397,6 +438,21 @@ encodeChart (Chart allSeries options) =
         , ( "legend", encodeLegendOptions options.legend )
         , ( "xaxis", encodeXAxisOptions options.xAxis )
         ]
+            ++ List.filterMap identity
+                [ allSeries
+                    |> List.filterMap
+                        (\serie ->
+                            case serie of
+                                Single _ data ->
+                                    List.unzip data |> Tuple.first |> Just
+
+                                _ ->
+                                    Nothing
+                        )
+                    |> List.head
+                    |> Maybe.map (\labels -> ("labels", ))
+
+                ]
 
 
 encodeSeries : Series -> Json.Encode.Value
@@ -406,7 +462,9 @@ encodeSeries series =
             Json.Encode.object
                 [ ( "name", Json.Encode.string name )
                 , ( "data"
-                  , Json.Encode.list Json.Encode.float data
+                  , Json.Encode.list Json.Encode.float <|
+                        Tuple.second <|
+                            List.unzip data
                   )
                 ]
 
@@ -466,12 +524,24 @@ encodeLegendOptions show =
 
 encodeChartOptions : ChartOptions -> Json.Encode.Value
 encodeChartOptions { type_, toolbar, zoom } =
-    Json.Encode.object
+    Json.Encode.object <|
         [ ( "width", Json.Encode.string "100%" )
-        , ( "type", type_ |> chartTypeWithDefault "line" |> Json.Encode.string )
         , ( "toolbar", Json.Encode.object [ ( "show", Json.Encode.bool toolbar ) ] )
         , ( "zoom", Json.Encode.object [ ( "enabled", Json.Encode.bool zoom ) ] )
         ]
+            ++ (case type_ of
+                    Unset ->
+                        []
+
+                    Infered value ->
+                        [ ( "type", value |> Json.Encode.string ) ]
+
+                    Set "" ->
+                        []
+
+                    Set value ->
+                        [ ( "type", value |> Json.Encode.string ) ]
+               )
 
 
 encodeXAxisOptions : XAxisOptions -> Json.Encode.Value
