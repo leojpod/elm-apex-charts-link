@@ -220,7 +220,7 @@ view { logins, stateReport } =
                 |> Apex.addColumnSeries "Connections outside office hour for that week" (outsideOfficeHourConnectionByWeek logins)
                 |> Apex.withXAxisType Apex.DateTime
     in
-    div [ class "container grid grid-cols-1 gap-4 md:grid-cols-3" ]
+    div [ class "p-1 grid grid-cols-1 gap-4 md:grid-cols-3" ]
         [ div [ id "chart1", class "col-span-1 md:col-span-3" ] [ div [] [] ]
         , Apex.apexChart
             (Apex.makePie "State"
@@ -232,10 +232,10 @@ view { logins, stateReport } =
             [ class "col-span-1 md:col-span-2" ]
             []
         , div [ class "flex flex-col items-center" ]
-        [ div [ class "flex flex-col items-center justify-center w-56 h-56 bg-red-400 rounded-full" ] [
-            h1 [  class "text-xl font-bold text-white"][ text "56 " ],
-            h1 [ class "font-bold text-gray-200 text-l" ] [ text "incidents" ]
-            ]
+            [ div [ class "flex flex-col items-center justify-center w-56 h-56 bg-red-400 rounded-full" ]
+                [ h1 [ class "text-xl font-bold text-white" ] [ text "56 " ]
+                , h1 [ class "font-bold text-gray-50 text-l" ] [ text "incidents" ]
+                ]
             , Apex.apexChart defaultChart [ class "col-span-1" ] []
             ]
         , Apex.apexChart defaultChart [ class "col-span-1" ] []

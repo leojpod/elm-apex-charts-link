@@ -8,7 +8,7 @@ module Apex exposing
     , XAxisType(..)
     , encodeChart
     , apexChart
-    , makePie, setChartType
+    , makePie, makeRadial, setChartType
     )
 
 {-| This package provide a (WIP) integration between elm and [Apex charts](https://apexcharts.com/) via either custom-element or ports.
@@ -203,12 +203,15 @@ type alias Options =
     , legend : LegendOptions
     , xAxis : XAxisOptions
     }
-mapOptions: (Options -> Options) -> Chart -> Chart
-mapOptions mapFct chartDefinition = 
-    case chartDefinition of 
-        SingleSeriesChart name series options -> 
+
+
+mapOptions : (Options -> Options) -> Chart -> Chart
+mapOptions mapFct chartDefinition =
+    case chartDefinition of
+        SingleSeriesChart name series options ->
             SingleSeriesChart name series <| mapFct options
-        Chart series options -> 
+
+        Chart series options ->
             Chart series <| mapFct options
 
 
@@ -342,10 +345,12 @@ chart =
 {-| as the name suggest, this add a line to your chart by creating a series with the given name and by linking the given points together.
 -}
 addLineSeries : String -> List Point -> Chart -> Chart
-addLineSeries name series chartDefinition = 
-    case chartDefinition of 
-        SingleSeriesChart _ _ _ -> chartDefinition
-        Chart allSeries options -> 
+addLineSeries name series chartDefinition =
+    case chartDefinition of
+        SingleSeriesChart _ _ _ ->
+            chartDefinition
+
+        Chart allSeries options ->
             let
                 chartOptions =
                     options.chart
@@ -362,10 +367,12 @@ addLineSeries name series chartDefinition =
 {-| as the name suggest, this add a new column series to your chart using the given name and by adding a bar for each of the given points.
 -}
 addColumnSeries : String -> List Point -> Chart -> Chart
-addColumnSeries name series chartDefinition = 
-    case chartDefinition of 
-        SingleSeriesChart _ _ _ -> chartDefinition
-        (Chart allSeries options) ->
+addColumnSeries name series chartDefinition =
+    case chartDefinition of
+        SingleSeriesChart _ _ _ ->
+            chartDefinition
+
+        Chart allSeries options ->
             let
                 chartOptions =
                     options.chart
@@ -389,39 +396,51 @@ makePie name labelledData =
         }
 
 
+makeRadial : String -> List ( String, Float ) -> Chart
+makeRadial name labelledData =
+    SingleSeriesChart name
+        labelledData
+        { defaultOptions
+            | chart =
+                { defaultChartOptions | type_ = Set "radialBar" }
+        }
+
+
 
 {--cosmetic things --}
 
 
 setChartType : Maybe String -> Chart -> Chart
-setChartType maybeString  = 
-    mapOptions 
-        (\options -> 
+setChartType maybeString =
+    mapOptions
+        (\options ->
             let
                 chartOptions =
                     options.chart
             in
-                { options
-                    | chart =
-                        { chartOptions
-                            | type_ =
-                                -- TODO change that stuff at some point
-                                Set <| Maybe.withDefault "" maybeString
-                        }
-                })
+            { options
+                | chart =
+                    { chartOptions
+                        | type_ =
+                            -- TODO change that stuff at some point
+                            Set <| Maybe.withDefault "" maybeString
+                    }
+            }
+        )
+
 
 {-| Allow to turn on or off the legend for the graph
 -}
 withLegends : Bool -> Chart -> Chart
-withLegends bool  =
-    mapOptions ( \options ->  { options | legend = bool })
+withLegends bool =
+    mapOptions (\options -> { options | legend = bool })
 
 
 {-| change the type of x-axis used in you graph
 -}
 withXAxisType : XAxisType -> Chart -> Chart
-withXAxisType type_  =
-    mapOptions  (\options -> { options | xAxis = type_ })
+withXAxisType type_ =
+    mapOptions (\options -> { options | xAxis = type_ })
 
 
 
