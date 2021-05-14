@@ -154,10 +154,9 @@ type alias Point =
 
 {-| This is an internal type to make sure we're keeping the definitions and list handling coherent and free from outside manipulation
 -}
-type
-    Chart
-    -- TODO maybe add something like "FinalChart" which prevent to continue chaining stuff
+type Chart
     = Chart ChartSeries Options
+      -- TODO maybe add something like "FinalChart" which prevent to continue chaining stuff
     | SingleSeriesChart String SingleSeriesData Options
 
 

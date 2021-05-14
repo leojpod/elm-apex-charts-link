@@ -236,7 +236,12 @@ view { logins, stateReport } =
                 [ h1 [ class "text-xl font-bold text-white" ] [ text "56 " ]
                 , h1 [ class "font-bold text-gray-50 text-l" ] [ text "incidents" ]
                 ]
-            , Apex.apexChart defaultChart [ class "col-span-1" ] []
+            , Apex.apexChart
+                (Apex.makeRadial "Time boooked"
+                    [ ( "room 1", 80 ) ]
+                )
+                [ class "col-span-1" ]
+                []
             ]
         , Apex.apexChart defaultChart [ class "col-span-1" ] []
         ]
