@@ -1,14 +1,8 @@
 module Apex exposing
-    ( chart
-    , Point
-    , addLineSeries
-    , addColumnSeries
-    , withLegends
-    , withXAxisType
-    , XAxisType(..)
-    , encodeChart
+    ( encodeChart
     , apexChart
-    , makePie, makeRadial, setChartType
+    , fromPlotChart
+    -- , fromRoundChart
     )
 
 {-| This package provide a (WIP) integration between elm and [Apex charts](https://apexcharts.com/) via either custom-element or ports.
@@ -129,65 +123,23 @@ app.ports.updateChart.subscribe((chartDescription) => {
 import Html exposing (Html)
 import Html.Attributes
 import Json.Encode
+import Charts.Plots exposing (PlotChart)
 
 
-{-| this is the custom element wrapper.
-Make sure that you have installed the javascript companion package (`npm i elm-apex-charts-link`) before using this function!
--}
-apexChart : Chart -> List (Html.Attribute msg) -> List (Html msg) -> Html msg
-apexChart aChart extraAttributes =
-    Html.node "apex-chart"
-        ((Html.Attributes.property "data" <|
-            encodeChart aChart
-         )
-            :: extraAttributes
-        )
 
-
-{-| A simple record type to make things a bit clearer when writing series
--}
-type alias Point =
-    { x : Float
-    , y : Float
-    }
 
 
 {-| This is an internal type to make sure we're keeping the definitions and list handling coherent and free from outside manipulation
 -}
 type Chart
-    = Chart ChartSeries Options
-      -- TODO maybe add something like "FinalChart" which prevent to continue chaining stuff
-    | SingleSeriesChart String SingleSeriesData Options
-
-
-{-| might be over zealous on the alias type but well...
--}
-type alias ChartSeries =
-    List Series
-
-
-{-| there are 2 main types of series:
-
-  - single point: for pie charts, radar charts and the like of them
-  - paired point: for column, line, area, anything else really
-
--}
-type Series
-    = Single String SingleSeriesData
-    | Paired String PairedSeriesType PairedSeriesData
+    = PlotChart_ PlotChart
+    -- | RoundChart_ RoundChart 
 
 
 type alias SingleSeriesData =
     List ( String, Float )
 
 
-type alias PairedSeriesData =
-    List Point
-
-
-type PairedSeriesType
-    = Lines
-    | Columns
 
 
 type alias Options =
@@ -202,60 +154,6 @@ type alias Options =
     , legend : LegendOptions
     , xAxis : XAxisOptions
     }
-
-
-mapOptions : (Options -> Options) -> Chart -> Chart
-mapOptions mapFct chartDefinition =
-    case chartDefinition of
-        SingleSeriesChart name series options ->
-            SingleSeriesChart name series <| mapFct options
-
-        Chart series options ->
-            Chart series <| mapFct options
-
-
-defaultOptions : Options
-defaultOptions =
-    { noData = "loading ..."
-    , chart = defaultChartOptions
-    , dataLabels = False
-    , stroke = defaultStrokeOptions
-    , grid = defaultGridOptions
-    , legend = defaultLegendOptions
-    , xAxis = defaultXAxisOptions
-    }
-
-
-type ChartType
-    = Unset
-    | Infered String
-    | Set String
-
-
-setInferedType : String -> ChartType -> ChartType
-setInferedType inferedType chartType =
-    case chartType of
-        Unset ->
-            Infered inferedType
-
-        Infered _ ->
-            Infered inferedType
-
-        _ ->
-            chartType
-
-
-chartTypeWithDefault : String -> ChartType -> String
-chartTypeWithDefault default chartType =
-    case chartType of
-        Unset ->
-            default
-
-        Infered type_ ->
-            type_
-
-        Set type_ ->
-            type_
 
 
 type alias ChartOptions =
@@ -292,99 +190,6 @@ type alias GridOptions =
     Bool
 
 
-defaultGridOptions : GridOptions
-defaultGridOptions =
-    False
-
-
-type alias LegendOptions =
-    Bool
-
-
-defaultLegendOptions : GridOptions
-defaultLegendOptions =
-    False
-
-
-type alias XAxisOptions =
-    XAxisType
-
-
-{-| Describe how the x-axis of your graph should be labelled.
-
-It can be either a Category, a DateTime or a Numeric value
-
-NOTE: for the DateTime to properly work I suggest that the x-values in your series should be turned into miliseconds via `Time.posixToMillis`. I hope to find something better in due time but that's the best option until then.
-
--}
-type XAxisType
-    = Category
-    | DateTime
-    | Numeric
-
-
-defaultXAxisOptions : XAxisOptions
-defaultXAxisOptions =
-    defaultXAxisType
-
-
-defaultXAxisType : XAxisType
-defaultXAxisType =
-    Numeric
-
-
-{-| this is the entry point of any chart: it gives you an empty chart with some default options
--}
-chart : Chart
-chart =
-    Chart []
-        defaultOptions
-
-
-{-| as the name suggest, this add a line to your chart by creating a series with the given name and by linking the given points together.
--}
-addLineSeries : String -> List Point -> Chart -> Chart
-addLineSeries name series chartDefinition =
-    case chartDefinition of
-        SingleSeriesChart _ _ _ ->
-            chartDefinition
-
-        Chart allSeries options ->
-            let
-                chartOptions =
-                    options.chart
-            in
-            Chart (Paired name Lines series :: allSeries)
-                { options
-                    | chart =
-                        { chartOptions
-                            | type_ = setInferedType "line" chartOptions.type_
-                        }
-                }
-
-
-{-| as the name suggest, this add a new column series to your chart using the given name and by adding a bar for each of the given points.
--}
-addColumnSeries : String -> List Point -> Chart -> Chart
-addColumnSeries name series chartDefinition =
-    case chartDefinition of
-        SingleSeriesChart _ _ _ ->
-            chartDefinition
-
-        Chart allSeries options ->
-            let
-                chartOptions =
-                    options.chart
-            in
-            Chart (Paired name Columns series :: allSeries)
-                { options
-                    | chart =
-                        { chartOptions
-                            | type_ = setInferedType "bar" chartOptions.type_
-                        }
-                }
-
-
 makePie : String -> List ( String, Float ) -> Chart
 makePie name labelledData =
     SingleSeriesChart name
@@ -404,42 +209,13 @@ makeRadial name labelledData =
                 { defaultChartOptions | type_ = Set "radialBar" }
         }
 
+fromPlotChart: PlotChart -> Chart
+fromPlotChart = 
+    PlotChart_
 
 
-{--cosmetic things --}
-
-
-setChartType : Maybe String -> Chart -> Chart
-setChartType maybeString =
-    mapOptions
-        (\options ->
-            let
-                chartOptions =
-                    options.chart
-            in
-            { options
-                | chart =
-                    { chartOptions
-                        | type_ =
-                            -- TODO change that stuff at some point
-                            Set <| Maybe.withDefault "" maybeString
-                    }
-            }
-        )
-
-
-{-| Allow to turn on or off the legend for the graph
--}
-withLegends : Bool -> Chart -> Chart
-withLegends bool =
-    mapOptions (\options -> { options | legend = bool })
-
-
-{-| change the type of x-axis used in you graph
--}
-withXAxisType : XAxisType -> Chart -> Chart
-withXAxisType type_ =
-    mapOptions (\options -> { options | xAxis = type_ })
+-- fromRoundChart: RoundChart -> Chart
+-- fromRoundChart = RoundChart_
 
 
 
@@ -597,8 +373,21 @@ encodeXAxisOptions type_ =
 
                     DateTime ->
                         "datetime"
-
                     Numeric ->
                         "numeric"
           )
         ]
+
+{-- Interop area --}
+
+{-| this is the custom element wrapper.
+Make sure that you have installed the javascript companion package (`npm i elm-apex-charts-link`) before using this function!
+-}
+apexChart : Chart -> List (Html.Attribute msg) -> List (Html msg) -> Html msg
+apexChart aChart extraAttributes =
+    Html.node "apex-chart"
+        ((Html.Attributes.property "data" <|
+            encodeChart aChart
+         )
+            :: extraAttributes
+        )
