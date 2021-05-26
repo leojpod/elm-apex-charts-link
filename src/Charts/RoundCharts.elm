@@ -1,4 +1,9 @@
-module Charts.RoundCharts exposing (..)
+module Charts.RoundCharts exposing
+    ( RoundChart
+    , chartData
+    , pieChart
+    , radialBar
+    )
 
 import Charts.Options exposing (Options)
 
@@ -27,6 +32,11 @@ type alias RoundChartData =
 
 type RoundChart
     = RoundChart RoundChartData
+
+
+chartData : RoundChart -> RoundChartData
+chartData (RoundChart data) =
+    data
 
 
 pieChart : String -> List ( String, Float ) -> RoundChart

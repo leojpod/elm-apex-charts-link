@@ -1,8 +1,7 @@
 module Apex exposing
     ( encodeChart
     , apexChart
-    , fromPlotChart
-    -- , fromRoundChart
+    , fromPlotChart, fromRoundChart
     )
 
 {-| This package provide a (WIP) integration between elm and [Apex charts](https://apexcharts.com/) via either custom-element or ports.
@@ -120,106 +119,32 @@ app.ports.updateChart.subscribe((chartDescription) => {
 
 -}
 
+import Charts.Plots exposing (PlotChart)
+import Charts.RoundCharts exposing (RoundChart)
 import Html exposing (Html)
 import Html.Attributes
 import Json.Encode
-import Charts.Plots exposing (PlotChart)
-
-
-
 
 
 {-| This is an internal type to make sure we're keeping the definitions and list handling coherent and free from outside manipulation
 -}
 type Chart
     = PlotChart_ PlotChart
-    -- | RoundChart_ RoundChart 
+    | RoundChart_ RoundChart
 
 
-type alias SingleSeriesData =
-    List ( String, Float )
-
-
-
-
-type alias Options =
-    { --| note this will change to a real type
-      noData : String
-    , chart : ChartOptions
-
-    --| note this will change to a real type
-    , dataLabels : Bool
-    , stroke : StokeOptions
-    , grid : GridOptions
-    , legend : LegendOptions
-    , xAxis : XAxisOptions
-    }
-
-
-type alias ChartOptions =
-    { type_ : ChartType
-    , toolbar : Bool
-    , zoom : Bool
-    }
-
-
-defaultChartOptions : ChartOptions
-defaultChartOptions =
-    { type_ = Unset
-    , toolbar = False
-    , zoom = False
-    }
-
-
-type alias StokeOptions =
-    { curve : String
-    , show : Bool
-    , width : Int
-    }
-
-
-defaultStrokeOptions : StokeOptions
-defaultStrokeOptions =
-    { curve = "smooth"
-    , show = True
-    , width = 2
-    }
-
-
-type alias GridOptions =
-    Bool
-
-
-makePie : String -> List ( String, Float ) -> Chart
-makePie name labelledData =
-    SingleSeriesChart name
-        labelledData
-        { defaultOptions
-            | chart =
-                { defaultChartOptions | type_ = Set "pie" }
-        }
-
-
-makeRadial : String -> List ( String, Float ) -> Chart
-makeRadial name labelledData =
-    SingleSeriesChart name
-        labelledData
-        { defaultOptions
-            | chart =
-                { defaultChartOptions | type_ = Set "radialBar" }
-        }
-
-fromPlotChart: PlotChart -> Chart
-fromPlotChart = 
+fromPlotChart : PlotChart -> Chart
+fromPlotChart =
     PlotChart_
 
 
--- fromRoundChart: RoundChart -> Chart
--- fromRoundChart = RoundChart_
+fromRoundChart : RoundChart -> Chart
+fromRoundChart =
+    RoundChart_
 
 
 
-{--Encoding part --}
+{--_Encoding part --}
 
 
 {-| this function takes a chart and turns it into JSON data that Apex Charts can understand
@@ -228,13 +153,13 @@ NOTE: if you are using the custom-element version you should not need to use thi
 
 -}
 encodeChart : Chart -> Json.Encode.Value
-encodeChart chartDefinition =
-    case chartDefinition of
-        Chart series options ->
-            encodeChart_ series options
+encodeChart chart =
+    case chart of
+        RoundChart_ roundChart ->
+            Apex.RoundChart.encode roundChart
 
-        SingleSeriesChart name series options ->
-            encodeSingleSeriesChart name series options
+        PlotChart_ plotChart ->
+            Apex.Plots.encode plotChart
 
 
 encodeChart_ : ChartSeries -> Options -> Json.Encode.Value
@@ -373,12 +298,16 @@ encodeXAxisOptions type_ =
 
                     DateTime ->
                         "datetime"
+
                     Numeric ->
                         "numeric"
           )
         ]
 
-{-- Interop area --}
+
+
+{--Interop area --}
+
 
 {-| this is the custom element wrapper.
 Make sure that you have installed the javascript companion package (`npm i elm-apex-charts-link`) before using this function!
