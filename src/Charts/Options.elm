@@ -36,3 +36,18 @@ default =
 withLegends : Bool -> Options -> Options
 withLegends bool options =
     { options | legends = bool }
+
+
+type alias StokeOptions =
+    { curve : String
+    , show : Bool
+    , width : Int
+    }
+
+
+defaultStrokeOptions : StokeOptions
+defaultStrokeOptions =
+    { curve = "smooth"
+    , show = True
+    , width = 2
+    }
