@@ -5,7 +5,6 @@ module Charts.RoundCharts exposing
     , radialBar
     )
 
-import Charts.Options exposing (Options)
 
 
 type RoundChartType
@@ -26,7 +25,6 @@ type alias RoundChartData =
     { name : String
     , series : List ( String, Float )
     , chartOptions : RoundChartOptions
-    , options : Options
     }
 
 

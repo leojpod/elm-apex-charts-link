@@ -10,12 +10,10 @@ module Charts.Plots exposing
     , withXAxisType
     )
 
-import Charts.Options exposing (Options)
-import Setting exposing (Setting(..))
-
-
 {-| A simple record type to make things a bit clearer when writing series
 -}
+
+
 type alias Point =
     { x : Float
     , y : Float
@@ -60,23 +58,29 @@ type XAxisType
     | DateTime
     | Numeric
 
-defaultXAxisType: XAxisType
-defaultXAxisType = Numeric 
+
+defaultXAxisType : XAxisType
+defaultXAxisType =
+    Numeric
 
 
 type alias XAxisOptions =
     XAxisType
 
 
-type alias GridOptions = Bool
+type alias GridOptions =
+    Bool
 
-defaultGridOptions: GridOptions 
-defaultGridOptions = False 
+
+defaultGridOptions : GridOptions
+defaultGridOptions =
+    False
+
 
 type alias PlotOptions =
     { type_ : Maybe String
     , xAxis : XAxisOptions
-    , grid: GridOptions
+    , grid : GridOptions
     }
 
 
@@ -87,10 +91,10 @@ defaultPlotOptions =
     , grid = defaultGridOptions
     }
 
+
 type alias PlotChartData =
     { series : List Series
     , plotOptions : PlotOptions
-    , options : Options
     }
 
 
@@ -98,7 +102,6 @@ defaultData : PlotChartData
 defaultData =
     { series = []
     , plotOptions = defaultPlotOptions
-    , options = Charts.Options.default
     }
 
 

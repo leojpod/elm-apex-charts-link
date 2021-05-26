@@ -1,15 +1,30 @@
-module Apex.RoundChart exposing (encode)
+module Apex.RoundChart exposing (toApex)
 
-import Charts.RoundCharts exposing (RoundChart(..))
-import Json.Encode
+import Apex.ChartDefinition exposing (ApexChart, defaultChart)
+import Charts.RoundCharts exposing (RoundChart)
 
 
-encode: RoundChart -> Json.Encode.Value
-encode (roundChart ) = 
-    let 
-    {name, series, chartOptions, options} = Charts.RoundCharts.chartData 
-    Json.Encode.object <|
-        [ ("labels", Json.Encode.list Json.Encode.string <| Tuple.first <| List.unzip series)
-        , ("series", Json.Encode.list Json.Encode.float <| Tuple.second <| List.unzip series)
-        ]
-        ++ Apex.Options.encode options
+toApex : RoundChart -> ApexChart
+toApex chart =
+    let
+        { series, chartOptions } =
+            Charts.RoundCharts.chartData chart
+
+        ( labels, values ) =
+            List.unzip series
+    in
+    { defaultChart
+        | chart = { defaultChartOptions | type_ = toApexChartType chartOptions.type_ }
+        , series = [ SingleValue values ]
+        , labels = Just labels
+    }
+
+
+toApexChartType : RoundChartType -> Apex.ChartDefinition.ChartType
+toApexChartType type_ =
+    case type_ of
+        Pie ->
+            Apex.ChartDefinition.Pie
+
+        Radial ->
+            Apex.ChartDefinition.RadialBar

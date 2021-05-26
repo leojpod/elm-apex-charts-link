@@ -119,6 +119,7 @@ app.ports.updateChart.subscribe((chartDescription) => {
 
 -}
 
+import Apex.ChartDefinition exposing (ApexChart, ChartOptions, GridOptions, LegendOptions, NoDataOptions, Point, Series, SeriesType(..), StrokeOptions, XAxisOptions, XAxisType(..))
 import Charts.Plots exposing (PlotChart)
 import Charts.RoundCharts exposing (RoundChart)
 import Html exposing (Html)
@@ -154,89 +155,95 @@ NOTE: if you are using the custom-element version you should not need to use thi
 -}
 encodeChart : Chart -> Json.Encode.Value
 encodeChart chart =
-    case chart of
-        RoundChart_ roundChart ->
-            Apex.RoundChart.encode roundChart
+    encodeApexChart <|
+        case chart of
+            RoundChart_ roundChart ->
+                Apex.RoundChart.toApex roundChart
 
-        PlotChart_ plotChart ->
-            Apex.Plots.encode plotChart
+            _ ->
+                Debug.todo ""
 
 
-encodeChart_ : ChartSeries -> Options -> Json.Encode.Value
-encodeChart_ allSeries options =
+encodeApexChart : ApexChart -> Json.Encode.Value
+encodeApexChart { chart, legend, noData, dataLabels, labels, stroke, grid, xaxis, series } =
     Json.Encode.object <|
-        (( "series", Json.Encode.list encodeSeries allSeries )
-            :: encodeEachOptions options
-        )
-
-
-encodeSingleSeriesChart : String -> SingleSeriesData -> Options -> Json.Encode.Value
-encodeSingleSeriesChart _ series options =
-    Json.Encode.object <|
-        [ ( "labels"
-          , Json.Encode.list Json.Encode.string <|
-                Tuple.first <|
-                    List.unzip series
-          )
-        , ( "series"
-          , Json.Encode.list Json.Encode.float <|
-                Tuple.second <|
-                    List.unzip series
-          )
+        [ ( "chart", encodeChartOptions chart )
+        , ( "legend", encodeLegendOptions legend )
+        , ( "noData", encodeNoDataOptions noData )
+        , ( "dataLabels", encodeDataLabelsOptions dataLabels )
+        , ( "stroke", encodeStrokeOptions stroke )
+        , ( "grid", encodeGridOptions grid )
+        , ( "series", Json.Encode.list encodeSeries series )
         ]
-            ++ encodeEachOptions options
-
-
-encodeEachOptions : Options -> List ( String, Json.Encode.Value )
-encodeEachOptions options =
-    [ ( "noData", Json.Encode.object [ ( "text", Json.Encode.string options.noData ) ] )
-    , ( "chart", encodeChartOptions options.chart )
-    , ( "dataLabels", Json.Encode.object [ ( "enabled", Json.Encode.bool options.dataLabels ) ] )
-    , ( "stroke", encodeStrokeOptions options.stroke )
-    , ( "grid", encodeGridOptions options.grid )
-    , ( "legend", encodeLegendOptions options.legend )
-    , ( "xaxis", encodeXAxisOptions options.xAxis )
-    ]
-
-
-encodeSeries : Series -> Json.Encode.Value
-encodeSeries series =
-    case series of
-        Single _ data ->
-            Json.Encode.object
-                [ ( "data"
-                  , Json.Encode.list Json.Encode.float <|
-                        Tuple.second <|
-                            List.unzip data
-                  )
-                ]
-
-        Paired name type_ dataPoints ->
-            Json.Encode.object
-                [ ( "name", Json.Encode.string name )
-                , ( "type"
-                  , case type_ of
-                        Lines ->
-                            Json.Encode.string "line"
-
-                        Columns ->
-                            Json.Encode.string "column"
-                  )
-                , ( "data"
-                  , Json.Encode.list encodePoint dataPoints
-                  )
+            ++ List.filterMap identity
+                [ xaxis |> Maybe.map (\xaxisOptions -> ( "xaxis", encodeXAxisOptions xaxisOptions ))
+                , labels |> Maybe.map (\labelsValues -> ( "labels", Json.Encode.list Json.Encode.string labelsValues ))
                 ]
 
 
-encodePoint : Point -> Json.Encode.Value
-encodePoint { x, y } =
-    Json.Encode.object [ ( "x", Json.Encode.float x ), ( "y", Json.Encode.float y ) ]
+encodeLegendOptions : LegendOptions -> Json.Encode.Value
+encodeLegendOptions show =
+    Json.Encode.object [ ( "show", Json.Encode.bool show ) ]
 
 
-encodeStrokeOptions : StokeOptions -> Json.Encode.Value
+encodeChartOptions : ChartOptions -> Json.Encode.Value
+encodeChartOptions { type_, toolbar, zoom } =
+    Json.Encode.object
+        [ ( "width", Json.Encode.string "100%" )
+        , ( "toolbar", Json.Encode.object [ ( "show", Json.Encode.bool toolbar ) ] )
+        , ( "zoom", Json.Encode.object [ ( "enabled", Json.Encode.bool zoom ) ] )
+        , ( "type", encodeChartType type_ )
+        ]
+
+
+encodeChartType : ChartType -> Json.Encode.Value
+encodeChartType type_ =
+    Json.Encode.string <|
+        case type_ of
+            Line ->
+                "line"
+
+            Area ->
+                "area"
+
+            Bar ->
+                "bar"
+
+            Pie ->
+                "pie"
+
+            Donut ->
+                "donut"
+
+            RadialBar ->
+                "radialBar"
+
+
+encodeNoDataOptions : NoDataOptions -> Json.Encode.Value
+encodeNoDataOptions text =
+    Json.Encode.object [ ( "text", Json.Encode.string text ) ]
+
+
+encodeDataLabelsOptions : DataLabelOptions -> Json.Encode.Value
+encodeDataLabelsOptions dataLabelsEnabled =
+    Json.Encode.object [ ( "enabled", Json.Encode.bool dataLabelsEnabled ) ]
+
+
+encodeStrokeOptions : StrokeOptions -> Json.Encode.Value
 encodeStrokeOptions { curve, show, width } =
     Json.Encode.object
-        [ ( "curve", Json.Encode.string curve )
+        [ ( "curve"
+          , Json.Encode.string <|
+                case curve of
+                    Smooth ->
+                        "smooth"
+
+                    Strait ->
+                        "strait"
+
+                    Stepline ->
+                        "stepline"
+          )
         , ( "show", Json.Encode.bool show )
         , ( "width", Json.Encode.int width )
         ]
@@ -260,31 +267,37 @@ encodeGridOptions show =
             ]
 
 
-encodeLegendOptions : LegendOptions -> Json.Encode.Value
-encodeLegendOptions show =
-    Json.Encode.object [ ( "show", Json.Encode.bool show ) ]
-
-
-encodeChartOptions : ChartOptions -> Json.Encode.Value
-encodeChartOptions { type_, toolbar, zoom } =
+encodeSeries : Series -> Json.Encode.Value
+encodeSeries { data, name, type_ } =
     Json.Encode.object <|
-        [ ( "width", Json.Encode.string "100%" )
-        , ( "toolbar", Json.Encode.object [ ( "show", Json.Encode.bool toolbar ) ] )
-        , ( "zoom", Json.Encode.object [ ( "enabled", Json.Encode.bool zoom ) ] )
-        ]
-            ++ (case type_ of
-                    Unset ->
-                        []
+        List.filterMap identity <|
+            [ name |> Maybe.map (\name_ -> ( "name", Json.Encode.string name_ ))
+            , type_
+                |> Maybe.map
+                    (\type__ ->
+                        ( "type"
+                        , case type__ of
+                            Line ->
+                                "line"
 
-                    Infered value ->
-                        [ ( "type", value |> Json.Encode.string ) ]
+                            Column ->
+                                "column"
+                        )
+                    )
+            , ( "data"
+              , case data of
+                    SingleValue data_ ->
+                        Json.Encode.list Json.Encode.float <| Tuple.second <| List.unzip data_
 
-                    Set "" ->
-                        []
+                    PairedValue data_ ->
+                        Json.Encode.list encodePoint data_
+              )
+            ]
 
-                    Set value ->
-                        [ ( "type", value |> Json.Encode.string ) ]
-               )
+
+encodePoint : Point -> Json.Encode.Value
+encodePoint { x, y } =
+    Json.Encode.object [ ( "x", Json.Encode.float x ), ( "y", Json.Encode.float y ) ]
 
 
 encodeXAxisOptions : XAxisOptions -> Json.Encode.Value
