@@ -5,8 +5,6 @@ module Charts.Plots exposing
     , addColumnSeries
     , addLineSeries
     , plot
-    , setChartType
-    , withLegends
     , withXAxisType
     )
 
@@ -111,11 +109,6 @@ type PlotChart
     = PlotChart PlotChartData
 
 
-mapOption : (Options -> Options) -> PlotChart -> PlotChart
-mapOption fct (PlotChart data) =
-    PlotChart { data | options = fct data.options }
-
-
 mapPlotOption : (PlotOptions -> PlotOptions) -> PlotChart -> PlotChart
 mapPlotOption fct (PlotChart data) =
     PlotChart { data | plotOptions = fct data.plotOptions }
@@ -176,23 +169,3 @@ any option that relates to the regular plots
 withXAxisType : XAxisType -> PlotChart -> PlotChart
 withXAxisType type_ =
     mapPlotOption (\options -> { options | xAxis = type_ })
-
-
-setChartType : String -> PlotChart -> PlotChart
-setChartType type_ =
-    mapPlotOption (\options -> { options | type_ = Set type_ })
-
-
-
-{--
-# General Options
-
-those are simply gonna be wrapper around the Charts.Options module
---}
-
-
-{-| Allow to turn on or off the legend for the graph
--}
-withLegends : Bool -> PlotChart -> PlotChart
-withLegends bool =
-    mapOption (Charts.Options.withLegends bool)

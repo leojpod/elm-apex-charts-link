@@ -6,7 +6,6 @@ module Charts.RoundCharts exposing
     )
 
 
-
 type RoundChartType
     = Pie
     | Radial
@@ -43,7 +42,6 @@ pieChart name series =
         { name = name
         , series = series
         , chartOptions = { defaultChartOptions | type_ = Pie }
-        , options = Charts.Options.default
         }
 
 
@@ -53,5 +51,4 @@ radialBar name series =
         { name = name
         , series = series
         , chartOptions = { defaultChartOptions | type_ = Radial }
-        , options = Charts.Options.default
         }

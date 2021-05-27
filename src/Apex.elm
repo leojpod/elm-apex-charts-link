@@ -119,7 +119,7 @@ app.ports.updateChart.subscribe((chartDescription) => {
 
 -}
 
-import Apex.ChartDefinition exposing (ApexChart, ChartOptions, GridOptions, LegendOptions, NoDataOptions, Point, Series, SeriesType(..), StrokeOptions, XAxisOptions, XAxisType(..))
+import Apex.ChartDefinition exposing (ApexChart, ChartOptions, ChartType(..), CurveType(..), DataLabelOptions, GridOptions, LegendOptions, NoDataOptions, Point, Series, SeriesData(..), SeriesType(..), StrokeOptions, XAxisOptions, XAxisType(..))
 import Charts.Plots exposing (PlotChart)
 import Charts.RoundCharts exposing (RoundChart)
 import Html exposing (Html)
@@ -277,10 +277,10 @@ encodeSeries { data, name, type_ } =
                     (\type__ ->
                         ( "type"
                         , case type__ of
-                            Line ->
+                            LineSeries ->
                                 "line"
 
-                            Column ->
+                            ColumnSeries ->
                                 "column"
                         )
                     )

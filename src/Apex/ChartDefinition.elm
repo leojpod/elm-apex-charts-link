@@ -7,6 +7,7 @@ module Apex.ChartDefinition exposing
     , GridOptions
     , LegendOptions
     , NoDataOptions
+    , Point
     , Series
     , SeriesData(..)
     , SeriesType(..)
@@ -16,20 +17,19 @@ module Apex.ChartDefinition exposing
     , defaultChart
     )
 
-import Either exposing (Either)
-
-
 {-|
 
     The intent of that file is to get a "transition type" that will allow for more straight forward encoding to JSON and decoupling the Apex representation from the Chart definition
 
 -}
+
+
 type alias ApexChart =
     { chart : ChartOptions
     , legend : LegendOptions
     , noData : NoDataOptions
     , dataLabels : DataLabelOptions
-    , labels: Maybe (List String)
+    , labels : Maybe (List String)
     , stroke : StrokeOptions
     , grid : GridOptions
     , xaxis : Maybe XAxisOptions
@@ -111,8 +111,8 @@ type alias Point =
 
 
 type SeriesType
-    = Line
-    | Column
+    = LineSeries
+    | ColumnSeries
 
 
 defaultChart : ApexChart
