@@ -1,21 +1,26 @@
 module Apex.RoundChart exposing (toApex)
 
-import Apex.ChartDefinition exposing (ApexChart, defaultChart)
-import Charts.RoundCharts exposing (RoundChart)
+import Apex.ChartDefinition exposing (ApexChart, SeriesData(..), defaultChart, defaultChartOptions)
+import Charts.RoundChart exposing (RoundChart, RoundChartType(..))
 
 
 toApex : RoundChart -> ApexChart
 toApex chart =
     let
-        { series, chartOptions } =
-            Charts.RoundCharts.chartData chart
+        { name, series, chartOptions } =
+            Charts.RoundChart.chartData chart
 
         ( labels, values ) =
             List.unzip series
     in
     { defaultChart
         | chart = { defaultChartOptions | type_ = toApexChartType chartOptions.type_ }
-        , series = [ SingleValue values ]
+        , series =
+            [ { data = SingleValue values
+              , name = Just name
+              , type_ = Nothing
+              }
+            ]
         , labels = Just labels
     }
 

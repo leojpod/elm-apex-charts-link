@@ -120,8 +120,9 @@ app.ports.updateChart.subscribe((chartDescription) => {
 -}
 
 import Apex.ChartDefinition exposing (ApexChart, ChartOptions, ChartType(..), CurveType(..), DataLabelOptions, GridOptions, LegendOptions, NoDataOptions, Point, Series, SeriesData(..), SeriesType(..), StrokeOptions, XAxisOptions, XAxisType(..))
-import Charts.Plots exposing (PlotChart)
-import Charts.RoundCharts exposing (RoundChart)
+import Apex.RoundChart
+import Charts.Plot exposing (PlotChart)
+import Charts.RoundChart exposing (RoundChart)
 import Html exposing (Html)
 import Html.Attributes
 import Json.Encode
@@ -276,22 +277,24 @@ encodeSeries { data, name, type_ } =
                 |> Maybe.map
                     (\type__ ->
                         ( "type"
-                        , case type__ of
-                            LineSeries ->
-                                "line"
+                        , Json.Encode.string <|
+                            case type__ of
+                                LineSeries ->
+                                    "line"
 
-                            ColumnSeries ->
-                                "column"
+                                ColumnSeries ->
+                                    "column"
                         )
                     )
-            , ( "data"
-              , case data of
+            , Just
+                ( "data"
+                , case data of
                     SingleValue data_ ->
-                        Json.Encode.list Json.Encode.float <| Tuple.second <| List.unzip data_
+                        Json.Encode.list Json.Encode.float data_
 
                     PairedValue data_ ->
                         Json.Encode.list encodePoint data_
-              )
+                )
             ]
 
 

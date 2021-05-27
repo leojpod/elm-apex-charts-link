@@ -15,6 +15,7 @@ module Apex.ChartDefinition exposing
     , XAxisOptions
     , XAxisType(..)
     , defaultChart
+    , defaultChartOptions
     )
 
 {-|

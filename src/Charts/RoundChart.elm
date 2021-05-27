@@ -1,5 +1,6 @@
-module Charts.RoundCharts exposing
+module Charts.RoundChart exposing
     ( RoundChart
+    , RoundChartType(..)
     , chartData
     , pieChart
     , radialBar

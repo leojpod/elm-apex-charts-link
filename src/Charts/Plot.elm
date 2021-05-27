@@ -1,4 +1,4 @@
-module Charts.Plots exposing
+module Charts.Plot exposing
     ( PlotChart
     , Point
     , XAxisType(..)

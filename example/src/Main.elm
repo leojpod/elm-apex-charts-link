@@ -1,6 +1,8 @@
 port module Main exposing (main)
 
 import Apex
+import Charts.RoundChart
+import Charts.Plot
 import Browser
 import FakeData
 import Html exposing (Html, div, h1, text)
@@ -215,6 +217,7 @@ view { logins, stateReport } =
     let
         defaultChart =
             Apex.chart
+                
                 |> Apex.addLineSeries "Connections by week" (connectionsByWeek logins)
                 |> Apex.addColumnSeries "Connections within office hour for that week" (dayTimeConnectionByWeek logins)
                 |> Apex.addColumnSeries "Connections outside office hour for that week" (outsideOfficeHourConnectionByWeek logins)
@@ -223,7 +226,7 @@ view { logins, stateReport } =
     div [ class "p-1 grid grid-cols-1 gap-4 md:grid-cols-3" ]
         [ div [ id "chart1", class "col-span-1 md:col-span-3" ] [ div [] [] ]
         , Apex.apexChart
-            (Apex.makePie "State"
+            (Apex.fromRoundChart <| Charts.RoundChart.pieChart "State"
                 [ ( "working", stateReport.working |> toFloat )
                 , ( "meeh", stateReport.meeh |> toFloat )
                 , ( "not working", stateReport.notWorking |> toFloat )
