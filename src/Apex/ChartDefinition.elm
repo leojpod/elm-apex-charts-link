@@ -7,9 +7,9 @@ module Apex.ChartDefinition exposing
     , GridOptions
     , LegendOptions
     , NoDataOptions
+    , PairedSeries
     , Point
-    , Series
-    , SeriesData(..)
+    , Series(..)
     , SeriesType(..)
     , StrokeOptions
     , XAxisOptions
@@ -34,7 +34,7 @@ type alias ApexChart =
     , stroke : StrokeOptions
     , grid : GridOptions
     , xAxis : Maybe XAxisOptions
-    , series : List Series
+    , series : Series
     }
 
 
@@ -93,16 +93,16 @@ type XAxisType
     | Numeric
 
 
-type alias Series =
-    { data : SeriesData
-    , name : Maybe String
-    , type_ : Maybe SeriesType
+type alias PairedSeries =
+    { data : List Point
+    , name : String
+    , type_ : SeriesType
     }
 
 
-type SeriesData
-    = SingleValue (List Float)
-    | PairedValue (List Point)
+type Series
+    = SingleValueSeries (List Float)
+    | PairedValueSeries (List PairedSeries)
 
 
 type alias Point =
@@ -126,7 +126,7 @@ defaultChart =
     , stroke = defaultStrokeOptions
     , grid = defaultGridOptions
     , xAxis = Nothing
-    , series = []
+    , series = PairedValueSeries []
     }
 
 

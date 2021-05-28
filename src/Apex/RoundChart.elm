@@ -1,6 +1,6 @@
 module Apex.RoundChart exposing (toApex)
 
-import Apex.ChartDefinition exposing (ApexChart, SeriesData(..), defaultChart, defaultChartOptions)
+import Apex.ChartDefinition exposing (ApexChart, Series(..), defaultChart, defaultChartOptions)
 import Charts.RoundChart exposing (RoundChart, RoundChartType(..))
 
 
@@ -16,11 +16,7 @@ toApex chart =
     { defaultChart
         | chart = { defaultChartOptions | type_ = toApexChartType chartOptions.type_ }
         , series =
-            [ { data = SingleValue values
-              , name = Just name
-              , type_ = Nothing
-              }
-            ]
+            SingleValueSeries values
         , labels = Just labels
     }
 

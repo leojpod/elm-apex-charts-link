@@ -1,6 +1,6 @@
 module Apex.PlotChart exposing (toApex)
 
-import Apex.ChartDefinition as ChartDefinition exposing (ApexChart, SeriesData(..), defaultChart, defaultChartOptions)
+import Apex.ChartDefinition as ChartDefinition exposing (ApexChart, Series(..), defaultChart, defaultChartOptions)
 import Charts.PlotChart exposing (PlotChart, SeriesType(..), XAxisOptions, XAxisType(..))
 
 
@@ -36,11 +36,12 @@ toApex chart =
             series
                 |> List.map
                     (\{ name, type_, data } ->
-                        { name = Just name
-                        , type_ = Just <| toApexSerieType type_
-                        , data = ChartDefinition.PairedValue data
+                        { name =  name
+                        , type_ =  toApexSerieType type_
+                        , data = data
                         }
                     )
+                |> PairedValueSeries
     }
 
 

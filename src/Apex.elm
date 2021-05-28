@@ -119,7 +119,7 @@ app.ports.updateChart.subscribe((chartDescription) => {
 
 -}
 
-import Apex.ChartDefinition exposing (ApexChart, ChartOptions, ChartType(..), CurveType(..), DataLabelOptions, GridOptions, LegendOptions, NoDataOptions, Point, Series, SeriesData(..), SeriesType(..), StrokeOptions, XAxisOptions, XAxisType(..))
+import Apex.ChartDefinition exposing (ApexChart, ChartOptions, ChartType(..), CurveType(..), DataLabelOptions, GridOptions, LegendOptions, NoDataOptions, PairedSeries, Point, Series(..), SeriesType(..), StrokeOptions, XAxisOptions, XAxisType(..))
 import Apex.PlotChart
 import Apex.RoundChart
 import Charts.PlotChart exposing (PlotChart)
@@ -168,7 +168,7 @@ encodeApexChart { chart, legend, noData, dataLabels, labels, stroke, grid, xAxis
         , ( "dataLabels", encodeDataLabelsOptions dataLabels )
         , ( "stroke", encodeStrokeOptions stroke )
         , ( "grid", encodeGridOptions grid )
-        , ( "series", Json.Encode.list encodeSeries series )
+        , ( "series", encodeSeries series )
         ]
             ++ List.filterMap identity
                 [ xAxis |> Maybe.map (\xaxisOptions -> ( "xaxis", encodeXAxisOptions xaxisOptions ))
@@ -263,33 +263,32 @@ encodeGridOptions show =
 
 
 encodeSeries : Series -> Json.Encode.Value
-encodeSeries { data, name, type_ } =
+encodeSeries series =
+    case series of
+        SingleValueSeries values ->
+            Json.Encode.list Json.Encode.float values
+
+        PairedValueSeries pairedSeries ->
+            Json.Encode.list encodePairedSeries pairedSeries
+
+
+encodePairedSeries : PairedSeries -> Json.Encode.Value
+encodePairedSeries { data, name, type_ } =
     Json.Encode.object <|
-        List.filterMap identity <|
-            [ name |> Maybe.map (\name_ -> ( "name", Json.Encode.string name_ ))
-            , type_
-                |> Maybe.map
-                    (\type__ ->
-                        ( "type"
-                        , Json.Encode.string <|
-                            case type__ of
-                                LineSeries ->
-                                    "line"
+        [ ( "name", Json.Encode.string name )
+        , ( "type"
+          , Json.Encode.string <|
+                case type_ of
+                    LineSeries ->
+                        "line"
 
-                                ColumnSeries ->
-                                    "column"
-                        )
-                    )
-            , Just
-                ( "data"
-                , case data of
-                    SingleValue data_ ->
-                        Json.Encode.list Json.Encode.float data_
-
-                    PairedValue data_ ->
-                        Json.Encode.list encodePoint data_
-                )
-            ]
+                    ColumnSeries ->
+                        "column"
+          )
+        , ( "data"
+          , Json.Encode.list encodePoint data
+          )
+        ]
 
 
 encodePoint : Point -> Json.Encode.Value
