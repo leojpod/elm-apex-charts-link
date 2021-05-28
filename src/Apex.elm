@@ -120,8 +120,9 @@ app.ports.updateChart.subscribe((chartDescription) => {
 -}
 
 import Apex.ChartDefinition exposing (ApexChart, ChartOptions, ChartType(..), CurveType(..), DataLabelOptions, GridOptions, LegendOptions, NoDataOptions, Point, Series, SeriesData(..), SeriesType(..), StrokeOptions, XAxisOptions, XAxisType(..))
+import Apex.PlotChart
 import Apex.RoundChart
-import Charts.Plot exposing (PlotChart)
+import Charts.PlotChart exposing (PlotChart)
 import Charts.RoundChart exposing (RoundChart)
 import Html exposing (Html)
 import Html.Attributes
@@ -131,18 +132,17 @@ import Json.Encode
 {-| This is an internal type to make sure we're keeping the definitions and list handling coherent and free from outside manipulation
 -}
 type Chart
-    = PlotChart_ PlotChart
-    | RoundChart_ RoundChart
+    = Chart ApexChart
 
 
 fromPlotChart : PlotChart -> Chart
 fromPlotChart =
-    PlotChart_
+    Apex.PlotChart.toApex >> Chart
 
 
 fromRoundChart : RoundChart -> Chart
 fromRoundChart =
-    RoundChart_
+    Apex.RoundChart.toApex >> Chart
 
 
 
@@ -155,18 +155,12 @@ NOTE: if you are using the custom-element version you should not need to use thi
 
 -}
 encodeChart : Chart -> Json.Encode.Value
-encodeChart chart =
-    encodeApexChart <|
-        case chart of
-            RoundChart_ roundChart ->
-                Apex.RoundChart.toApex roundChart
-
-            _ ->
-                Debug.todo ""
+encodeChart (Chart chart) =
+    encodeApexChart chart
 
 
 encodeApexChart : ApexChart -> Json.Encode.Value
-encodeApexChart { chart, legend, noData, dataLabels, labels, stroke, grid, xaxis, series } =
+encodeApexChart { chart, legend, noData, dataLabels, labels, stroke, grid, xAxis, series } =
     Json.Encode.object <|
         [ ( "chart", encodeChartOptions chart )
         , ( "legend", encodeLegendOptions legend )
@@ -177,7 +171,7 @@ encodeApexChart { chart, legend, noData, dataLabels, labels, stroke, grid, xaxis
         , ( "series", Json.Encode.list encodeSeries series )
         ]
             ++ List.filterMap identity
-                [ xaxis |> Maybe.map (\xaxisOptions -> ( "xaxis", encodeXAxisOptions xaxisOptions ))
+                [ xAxis |> Maybe.map (\xaxisOptions -> ( "xaxis", encodeXAxisOptions xaxisOptions ))
                 , labels |> Maybe.map (\labelsValues -> ( "labels", Json.Encode.list Json.Encode.string labelsValues ))
                 ]
 

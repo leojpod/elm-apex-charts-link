@@ -1,9 +1,12 @@
-module Charts.Plot exposing
+module Charts.PlotChart exposing
     ( PlotChart
     , Point
+    , SeriesType(..)
+    , XAxisOptions
     , XAxisType(..)
     , addColumnSeries
     , addLineSeries
+    , chartData
     , plot
     , withXAxisType
     )
@@ -19,8 +22,8 @@ type alias Point =
 
 
 type SeriesType
-    = Lines
-    | Columns
+    = LineSeries
+    | ColumnSeries
 
 
 type alias SeriesData =
@@ -76,17 +79,13 @@ defaultGridOptions =
 
 
 type alias PlotOptions =
-    { type_ : Maybe String
-    , xAxis : XAxisOptions
-    , grid : GridOptions
+    { xAxis : XAxisOptions
     }
 
 
 defaultPlotOptions : PlotOptions
 defaultPlotOptions =
-    { type_ = Nothing
-    , xAxis = defaultXAxisType
-    , grid = defaultGridOptions
+    { xAxis = defaultXAxisType
     }
 
 
@@ -107,6 +106,11 @@ defaultData =
 -}
 type PlotChart
     = PlotChart PlotChartData
+
+
+chartData : PlotChart -> PlotChartData
+chartData (PlotChart data) =
+    data
 
 
 mapPlotOption : (PlotOptions -> PlotOptions) -> PlotChart -> PlotChart
@@ -134,7 +138,7 @@ addLineSeries name newSeries (PlotChart data) =
         { data
             | series =
                 { name = name
-                , type_ = Lines
+                , type_ = LineSeries
                 , data = newSeries
                 }
                     :: data.series
@@ -149,7 +153,7 @@ addColumnSeries name newSeries (PlotChart data) =
         { data
             | series =
                 { name = name
-                , type_ = Columns
+                , type_ = ColumnSeries
                 , data = newSeries
                 }
                     :: data.series

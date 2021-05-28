@@ -33,7 +33,7 @@ type alias ApexChart =
     , labels : Maybe (List String)
     , stroke : StrokeOptions
     , grid : GridOptions
-    , xaxis : Maybe XAxisOptions
+    , xAxis : Maybe XAxisOptions
     , series : List Series
     }
 
@@ -125,7 +125,7 @@ defaultChart =
     , labels = Nothing
     , stroke = defaultStrokeOptions
     , grid = defaultGridOptions
-    , xaxis = Nothing
+    , xAxis = Nothing
     , series = []
     }
 

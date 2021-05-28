@@ -19,7 +19,6 @@ export class ApexChartElement extends HTMLElement {
   // to avoid useless encoding - decoding we'll use props to move things around
   // this means that to detect changes we'll transform the prop into a function via the setter
   set data (newValue) {
-    // console.log('newValue -> ', newValue)
     this._data = newValue
     if (this.chart) {
       this.chart.updateSeries(newValue.series)

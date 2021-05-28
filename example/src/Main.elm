@@ -1,9 +1,9 @@
 port module Main exposing (main)
 
 import Apex
-import Charts.RoundChart
-import Charts.Plot
 import Browser
+import Charts.PlotChart as Plot
+import Charts.RoundChart
 import FakeData
 import Html exposing (Html, div, h1, text)
 import Html.Attributes exposing (class, id)
@@ -107,9 +107,10 @@ update msg model =
             ( { model | yearlyUsage = usages }
             , updateChart <|
                 Apex.encodeChart <|
-                    (Apex.chart
-                        |> Apex.addColumnSeries "Time used" (usagesByMonth usages)
-                        |> Apex.withXAxisType Apex.DateTime
+                    (Plot.plot
+                        |> Plot.addColumnSeries "Time used" (usagesByMonth usages)
+                        |> Plot.withXAxisType Plot.DateTime
+                        |> Apex.fromPlotChart
                     )
             )
 
@@ -117,7 +118,7 @@ update msg model =
             ( { model | stateReport = stateReport }, Cmd.none )
 
 
-connectionsByWeek : List Login -> List Apex.Point
+connectionsByWeek : List Login -> List Plot.Point
 connectionsByWeek =
     List.Extra.gatherEqualsBy (.date >> Time.Extra.floor Time.Extra.Week Time.utc)
         >> List.map
@@ -133,7 +134,7 @@ connectionsByWeek =
         >> List.sortBy .x
 
 
-usagesByMonth : List FakeData.Usage -> List Apex.Point
+usagesByMonth : List FakeData.Usage -> List Plot.Point
 usagesByMonth =
     List.Extra.gatherEqualsBy (Time.Extra.floor Time.Extra.Month Time.utc)
         >> List.map
@@ -149,7 +150,7 @@ usagesByMonth =
         >> List.sortBy .x
 
 
-dayTimeConnectionByWeek : List Login -> List Apex.Point
+dayTimeConnectionByWeek : List Login -> List Plot.Point
 dayTimeConnectionByWeek =
     List.Extra.gatherEqualsBy (.date >> Time.Extra.floor Time.Extra.Week Time.utc)
         >> List.map
@@ -169,7 +170,7 @@ dayTimeConnectionByWeek =
         >> List.sortBy .x
 
 
-outsideOfficeHourConnectionByWeek : List Login -> List Apex.Point
+outsideOfficeHourConnectionByWeek : List Login -> List Plot.Point
 outsideOfficeHourConnectionByWeek =
     List.Extra.gatherEqualsBy (.date >> Time.Extra.floor Time.Extra.Week Time.utc)
         >> List.map
@@ -189,7 +190,7 @@ outsideOfficeHourConnectionByWeek =
         >> List.sortBy .x
 
 
-connectionsByHourOfTheDay : List Login -> List Apex.Point
+connectionsByHourOfTheDay : List Login -> List Plot.Point
 connectionsByHourOfTheDay =
     List.Extra.gatherEqualsBy (.date >> Time.toHour Time.utc)
         >> List.map
@@ -216,21 +217,22 @@ view : Model -> Html Msg
 view { logins, stateReport } =
     let
         defaultChart =
-            Apex.chart
-                
-                |> Apex.addLineSeries "Connections by week" (connectionsByWeek logins)
-                |> Apex.addColumnSeries "Connections within office hour for that week" (dayTimeConnectionByWeek logins)
-                |> Apex.addColumnSeries "Connections outside office hour for that week" (outsideOfficeHourConnectionByWeek logins)
-                |> Apex.withXAxisType Apex.DateTime
+            Plot.plot
+                |> Plot.addLineSeries "Connections by week" (connectionsByWeek logins)
+                |> Plot.addColumnSeries "Connections within office hour for that week" (dayTimeConnectionByWeek logins)
+                |> Plot.addColumnSeries "Connections outside office hour for that week" (outsideOfficeHourConnectionByWeek logins)
+                |> Plot.withXAxisType Plot.DateTime
+                |> Apex.fromPlotChart
     in
     div [ class "p-1 grid grid-cols-1 gap-4 md:grid-cols-3" ]
         [ div [ id "chart1", class "col-span-1 md:col-span-3" ] [ div [] [] ]
         , Apex.apexChart
-            (Apex.fromRoundChart <| Charts.RoundChart.pieChart "State"
-                [ ( "working", stateReport.working |> toFloat )
-                , ( "meeh", stateReport.meeh |> toFloat )
-                , ( "not working", stateReport.notWorking |> toFloat )
-                ]
+            (Apex.fromRoundChart <|
+                Charts.RoundChart.pieChart "State"
+                    [ ( "working", stateReport.working |> toFloat )
+                    , ( "meeh", stateReport.meeh |> toFloat )
+                    , ( "not working", stateReport.notWorking |> toFloat )
+                    ]
             )
             [ class "col-span-1 md:col-span-2" ]
             []
@@ -240,8 +242,8 @@ view { logins, stateReport } =
                 , h1 [ class "font-bold text-gray-50 text-l" ] [ text "incidents" ]
                 ]
             , Apex.apexChart
-                (Apex.makeRadial "Time boooked"
-                    [ ( "room 1", 80 ) ]
+                (Debug.log "round chart" <| Apex.fromRoundChart <|
+                    Charts.RoundChart.radialBar "Time boooked" [ ( "room 1", 80 ) ]
                 )
                 [ class "col-span-1" ]
                 []
