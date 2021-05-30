@@ -1,7 +1,8 @@
 module Apex exposing
-    ( encodeChart
+    ( fromPlotChart
+    , fromRoundChart
+    , encodeChart
     , apexChart
-    , fromPlotChart, fromRoundChart
     )
 
 {-| This package provide a (WIP) integration between elm and [Apex charts](https://apexcharts.com/) via either custom-element or ports.
@@ -13,17 +14,18 @@ Note, this package comes with an "already made" custom component which you can i
 Here is how you would describe a simple chart with some options (checkout the example project for more use-cases):
 
         import Apex
+        import Charts.PlotChart as Plot
 
         myChart : Html Msg
         myChart =
             Apex.apexChart
-                (Apex.chart
-                    |> Apex.addLineSeries "Connections by week" (connectionsByWeek logins)
-                    |> Apex.addColumnSeries "Connections within office hour for that week" (dayTimeConnectionByWeek logins)
-                    |> Apex.addColumnSeries "Connections outside office hour for that week" (outsideOfficeHourConnectionByWeek logins)
-                    |> Apex.withXAxisType Apex.DateTime
+                (Plot.plot
+                    |> Plot.addLineSeries "Connections by week" (connectionsByWeek logins)
+                    |> Plot.addColumnSeries "Connections within office hour for that week" (dayTimeConnectionByWeek logins)
+                    |> Plot.addColumnSeries "Connections outside office hour for that week" (outsideOfficeHourConnectionByWeek logins)
+                    |> Plot.withXAxisType Plot.DateTime
+                    |> Apex.fromPlotChart
                 )
-                []
                 []
 
 
@@ -34,30 +36,13 @@ For that please refer to the [README](./) page
 
 # Creating charts
 
+Creating charts is done by using the Charts modules ([PlotChart](./Charts-PlotChart) & [RoundChart](./Charts-RoundChart))
 
-# Entry point
+Once you have a Chart you can transform it into an Apex chart with one of these 2 function
 
-@docs chart
+@docs fromPlotChart
 
-
-## Adding data
-
-@docs Point
-
-@docs addLineSeries
-
-@docs addColumnSeries
-
-
-## Configuring the display
-
-@docs withLegends
-
-@docs withXAxisType
-
-@docs XAxisType
-
-NOTE: A lot more support for options and type of series needs to be added
+@docs fromRoundChart
 
 
 # Rendering charts
@@ -78,12 +63,13 @@ update msg _ =
             ( logins
             , updateChart <|
                 Apex.encodeChart <|
-                    (Apex.chart
-                        |> Apex.addLineSeries "Connections by week" (connectionsByWeek logins)
-                        |> Apex.addColumnSeries "Connections within office hour for that week" (dayTimeConnectionByWeek logins)
-                        |> Apex.addColumnSeries "Connections outside office hour for that week" (outsideOfficeHourConnectionByWeek logins)
-                        |> Apex.withXAxisType Apex.DateTime
-                    )
+                    Apex.fromPlotChart <|
+                        (Chart.PlotChart.chart
+                            |> Chart.PlotChart.addLineSeries "Connections by week" (connectionsByWeek logins)
+                            |> Chart.PlotChart.addColumnSeries "Connections within office hour for that week" (dayTimeConnectionByWeek logins)
+                            |> Chart.PlotChart.addColumnSeries "Connections outside office hour for that week" (outsideOfficeHourConnectionByWeek logins)
+                            |> Chart.PlotChart.withXAxisType Chart.DateTime
+                        )
             )
 ```
 
@@ -106,13 +92,13 @@ app.ports.updateChart.subscribe((chartDescription) => {
          myChart : Html Msg
          myChart =
              Apex.apexChart
-                 (Apex.chart
-                     |> Apex.addLineSeries "Connections by week" (connectionsByWeek logins)
-                     |> Apex.addColumnSeries "Connections within office hour for that week" (dayTimeConnectionByWeek logins)
-                     |> Apex.addColumnSeries "Connections outside office hour for that week" (outsideOfficeHourConnectionByWeek logins)
-                     |> Apex.withXAxisType Apex.DateTime
+                 (Chart.PlotChart.chart
+                    |> Chart.PlotChart.addLineSeries "Connections by week" (connectionsByWeek logins)
+                    |> Chart.PlotChart.addColumnSeries "Connections within office hour for that week" (dayTimeConnectionByWeek logins)
+                    |> Chart.PlotChart.addColumnSeries "Connections outside office hour for that week" (outsideOfficeHourConnectionByWeek logins)
+                    |> Chart.PlotChart.withXAxisType Apex.DateTime
+                    |> Apex.fromPlotChart
                  )
-                 []
                  []
 
 @docs apexChart
@@ -135,11 +121,15 @@ type Chart
     = Chart ApexChart
 
 
+{-| One you have a nice plot chart reprensentation from [`Charts.PlotChart`](./Charts-PlotChart) you can transform it to an Apex chart by calling this function
+-}
 fromPlotChart : PlotChart -> Chart
 fromPlotChart =
     Apex.PlotChart.toApex >> Chart
 
 
+{-| One you have a nice pie/radial chart reprensentation from [`Charts.RoundChart`](./Charts-RoundChart) you can transform it to an Apex chart by calling this function
+-}
 fromRoundChart : RoundChart -> Chart
 fromRoundChart =
     Apex.RoundChart.toApex >> Chart
@@ -321,7 +311,7 @@ encodeXAxisOptions type_ =
 {-| this is the custom element wrapper.
 Make sure that you have installed the javascript companion package (`npm i elm-apex-charts-link`) before using this function!
 -}
-apexChart : Chart -> List (Html.Attribute msg) -> List (Html msg) -> Html msg
+apexChart : Chart -> List (Html.Attribute msg) -> Html msg
 apexChart aChart extraAttributes =
     Html.node "apex-chart"
         ((Html.Attributes.property "data" <|
@@ -329,3 +319,4 @@ apexChart aChart extraAttributes =
          )
             :: extraAttributes
         )
+        []
