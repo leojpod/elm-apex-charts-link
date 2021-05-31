@@ -3,7 +3,7 @@ port module Main exposing (main)
 import Apex
 import Browser
 import Charts.PlotChart as Plot
-import Charts.RoundChart
+import Charts.RoundChart as RoundChart
 import FakeData
 import Html exposing (Html, div, h1, text)
 import Html.Attributes exposing (class, id)
@@ -227,24 +227,25 @@ view { logins, stateReport } =
     div [ class "p-1 grid grid-cols-1 gap-4 md:grid-cols-3" ]
         [ div [ id "chart1", class "col-span-1 md:col-span-3" ] [ div [] [] ]
         , Apex.apexChart
+            [ class "col-span-1 md:col-span-2" ]
             (Apex.fromRoundChart <|
-                Charts.RoundChart.pieChart "State"
+                RoundChart.pieChart "State"
                     [ ( "working", stateReport.working |> toFloat )
                     , ( "meeh", stateReport.meeh |> toFloat )
                     , ( "not working", stateReport.notWorking |> toFloat )
                     ]
             )
-            [ class "col-span-1 md:col-span-2" ]
         , div [ class "flex flex-col items-center" ]
             [ div [ class "flex flex-col items-center justify-center w-56 h-56 bg-red-400 rounded-full" ]
                 [ h1 [ class "text-xl font-bold text-white" ] [ text "56 " ]
                 , h1 [ class "font-bold text-gray-50 text-l" ] [ text "incidents" ]
                 ]
             , Apex.apexChart
-                (Debug.log "round chart" <| Apex.fromRoundChart <|
-                    Charts.RoundChart.radialBar "Time boooked" [ ( "room 1", 80 ) ]
-                )
                 [ class "col-span-1" ]
+                ( Apex.fromRoundChart (
+                    RoundChart.radialBar "Time boooked" [ ( "room 1", 80 ) ]
+                    |> RoundChart.withCustomAngles -90 90
+                ))
             ]
-        , Apex.apexChart defaultChart [ class "col-span-1" ] 
+        , Apex.apexChart [ class "col-span-1" ] defaultChart 
         ]

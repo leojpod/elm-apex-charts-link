@@ -158,7 +158,7 @@ defaultChartOptions =
 
 defaultLegendOptions : LegendOptions
 defaultLegendOptions =
-    True
+    False
 
 
 defaultNoDataOptions : NoDataOptions

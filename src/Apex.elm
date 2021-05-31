@@ -108,7 +108,7 @@ app.ports.updateChart.subscribe((chartDescription) => {
 import Apex.ChartDefinition exposing (ApexChart, ChartOptions, ChartType(..), CurveType(..), DataLabelOptions, GridOptions, LegendOptions, NoDataOptions, PairedSeries, Point, Series(..), SeriesType(..), StrokeOptions, XAxisOptions, XAxisType(..))
 import Apex.PlotChart
 import Apex.RoundChart
-import Charts.PlotChart exposing (PlotChart)
+import Charts.Plot exposing (Plot)
 import Charts.RoundChart exposing (RoundChart)
 import Html exposing (Html)
 import Html.Attributes
@@ -123,7 +123,7 @@ type Chart
 
 {-| One you have a nice plot chart reprensentation from [`Charts.PlotChart`](./Charts-PlotChart) you can transform it to an Apex chart by calling this function
 -}
-fromPlotChart : PlotChart -> Chart
+fromPlotChart : Plot -> Chart
 fromPlotChart =
     Apex.PlotChart.toApex >> Chart
 
@@ -218,16 +218,35 @@ encodePlotOptions type_ =
             Nothing
 
         Pie { angles } ->
-            Just <|
-                Json.Encode.object
-                    [ ( "pie", Json.Encode.object [] )
-                    ]
+            angles
+                |> Maybe.map
+                    (\{ from, to } ->
+                        Json.Encode.object
+                            [ ( "pie"
+                              , Json.Encode.object
+                                    [ ( "startAngle", Json.Encode.int from )
+                                    , ( "endAngle", Json.Encode.int to )
+                                    ]
+                              )
+                            ]
+                    )
 
         Donut ->
             Nothing
 
-        RadialBar _ ->
-            Nothing
+        RadialBar { angles } ->
+            angles
+                |> Maybe.map
+                    (\{ from, to } ->
+                        Json.Encode.object
+                            [ ( "radialBar"
+                              , Json.Encode.object
+                                    [ ( "startAngle", Json.Encode.int from )
+                                    , ( "endAngle", Json.Encode.int to )
+                                    ]
+                              )
+                            ]
+                    )
 
 
 encodeNoDataOptions : NoDataOptions -> Json.Encode.Value
@@ -337,8 +356,8 @@ encodeXAxisOptions type_ =
 {-| this is the custom element wrapper.
 Make sure that you have installed the javascript companion package (`npm i elm-apex-charts-link`) before using this function!
 -}
-apexChart : Chart -> List (Html.Attribute msg) -> Html msg
-apexChart aChart extraAttributes =
+apexChart : List (Html.Attribute msg) -> Chart -> Html msg
+apexChart extraAttributes aChart =
     Html.node "apex-chart"
         ((Html.Attributes.property "data" <|
             encodeChart aChart

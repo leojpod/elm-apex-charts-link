@@ -1,10 +1,10 @@
 module Apex.PlotChart exposing (toApex)
 
 import Apex.ChartDefinition as ChartDefinition exposing (ApexChart, Series(..), defaultChart, defaultChartOptions)
-import Charts.PlotChart exposing (PlotChart, SeriesType(..), XAxisOptions, XAxisType(..))
+import Charts.Plot exposing (Plot, SeriesType(..), XAxisOptions, XAxisType(..))
 
 
-toApex : PlotChart -> ApexChart
+toApex : Plot -> ApexChart
 toApex chart =
     let
         { series, plotOptions } =
@@ -36,8 +36,8 @@ toApex chart =
             series
                 |> List.map
                     (\{ name, type_, data } ->
-                        { name =  name
-                        , type_ =  toApexSerieType type_
+                        { name = name
+                        , type_ = toApexSerieType type_
                         , data = data
                         }
                     )

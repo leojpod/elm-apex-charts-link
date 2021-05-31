@@ -1,5 +1,5 @@
-module Charts.PlotChart exposing
-    ( PlotChart
+module Charts.Plot exposing
+    ( Plot
     , plot
     , addColumnSeries
     , addLineSeries
@@ -16,7 +16,7 @@ module Charts.PlotChart exposing
 
 # Building a chart
 
-@docs PlotChart
+@docs Plot
 
 
 ## Start
@@ -135,12 +135,14 @@ defaultGridOptions =
 
 type alias PlotOptions =
     { xAxis : XAxisOptions
+    , horizontal : Bool
     }
 
 
 defaultPlotOptions : PlotOptions
 defaultPlotOptions =
     { xAxis = defaultXAxisType
+    , horizontal = False
     }
 
 
@@ -159,7 +161,7 @@ defaultData =
 
 {-| This is an internal type to make sure we're keeping the definitions and list handling coherent and free from outside manipulation
 -}
-type PlotChart
+type Plot
     = PlotChart PlotChartData
 
 
@@ -168,12 +170,12 @@ type PlotChart
 this is use to transform the underlying reprensentation to an Apex chart definition
 
 -}
-chartData : PlotChart -> PlotChartData
+chartData : Plot -> PlotChartData
 chartData (PlotChart data) =
     data
 
 
-mapPlotOption : (PlotOptions -> PlotOptions) -> PlotChart -> PlotChart
+mapPlotOption : (PlotOptions -> PlotOptions) -> Plot -> Plot
 mapPlotOption fct (PlotChart data) =
     PlotChart { data | plotOptions = fct data.plotOptions }
 
@@ -183,7 +185,7 @@ mapPlotOption fct (PlotChart data) =
 It creates an empty chart which you can use as basis, adding series to it, tuning axis and such ..
 
 -}
-plot : PlotChart
+plot : Plot
 plot =
     PlotChart defaultData
 
@@ -197,7 +199,7 @@ plot =
 
 {-| as the name suggest, this add a line to your chart by creating a series with the given name and by linking the given points together.
 -}
-addLineSeries : String -> List Point -> PlotChart -> PlotChart
+addLineSeries : String -> List Point -> Plot -> Plot
 addLineSeries name newSeries (PlotChart data) =
     PlotChart
         { data
@@ -212,7 +214,7 @@ addLineSeries name newSeries (PlotChart data) =
 
 {-| as the name suggest, this add a new column series to your chart using the given name and by adding a bar for each of the given points.
 -}
-addColumnSeries : String -> List Point -> PlotChart -> PlotChart
+addColumnSeries : String -> List Point -> Plot -> Plot
 addColumnSeries name newSeries (PlotChart data) =
     PlotChart
         { data
@@ -235,6 +237,6 @@ any option that relates to the regular plots
 
 {-| change the type of x-axis used in you graph
 -}
-withXAxisType : XAxisType -> PlotChart -> PlotChart
+withXAxisType : XAxisType -> Plot -> Plot
 withXAxisType type_ =
     mapPlotOption (\options -> { options | xAxis = type_ })
