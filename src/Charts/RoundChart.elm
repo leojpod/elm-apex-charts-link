@@ -2,8 +2,10 @@ module Charts.RoundChart exposing
     ( RoundChart
     , pieChart
     , radialBar
+    , withCustomAngles
     , chartData
     , RoundChartType(..)
+    , RoundChartOptions
     )
 
 {-| Use this module to create pie charts, radial charts (and all kind of roundly shaped charts).
@@ -23,7 +25,9 @@ These charts generally work with either 1 single value or a single series of val
 
 ## Customizations
 
-To be implemented
+@docs withCustomAngles
+
+More to come!
 
 
 # Internals
@@ -41,13 +45,19 @@ type RoundChartType
     | Radial
 
 
+{-| Internal type used to describe general options for the round charts
+-}
 type alias RoundChartOptions =
-    { type_ : RoundChartType }
+    { type_ : RoundChartType
+    , angles : Maybe { from : Int, to : Int }
+    }
 
 
 defaultChartOptions : RoundChartOptions
 defaultChartOptions =
-    { type_ = Pie }
+    { type_ = Pie
+    , angles = Nothing
+    }
 
 
 type alias RoundChartData =
@@ -95,4 +105,16 @@ radialBar name series =
         { name = name
         , series = series
         , chartOptions = { defaultChartOptions | type_ = Radial }
+        }
+
+
+
+{--Customizations --}
+
+
+withCustomAngles : Int -> Int -> RoundChart -> RoundChart
+withCustomAngles from to (RoundChart ({ chartOptions } as data)) =
+    RoundChart
+        { data
+            | chartOptions = { chartOptions | angles = Just { from = from, to = to} }
         }

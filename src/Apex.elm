@@ -163,6 +163,7 @@ encodeApexChart { chart, legend, noData, dataLabels, labels, stroke, grid, xAxis
             ++ List.filterMap identity
                 [ xAxis |> Maybe.map (\xaxisOptions -> ( "xaxis", encodeXAxisOptions xaxisOptions ))
                 , labels |> Maybe.map (\labelsValues -> ( "labels", Json.Encode.list Json.Encode.string labelsValues ))
+                , encodePlotOptions chart.type_ |> Maybe.map (Tuple.pair "plotOptions")
                 ]
 
 
@@ -194,14 +195,39 @@ encodeChartType type_ =
             Bar ->
                 "bar"
 
-            Pie ->
+            Pie _ ->
                 "pie"
 
             Donut ->
                 "donut"
 
-            RadialBar ->
+            RadialBar _ ->
                 "radialBar"
+
+
+encodePlotOptions : ChartType -> Maybe Json.Encode.Value
+encodePlotOptions type_ =
+    case type_ of
+        Line ->
+            Nothing
+
+        Area ->
+            Nothing
+
+        Bar ->
+            Nothing
+
+        Pie { angles } ->
+            Just <|
+                Json.Encode.object
+                    [ ( "pie", Json.Encode.object [] )
+                    ]
+
+        Donut ->
+            Nothing
+
+        RadialBar _ ->
+            Nothing
 
 
 encodeNoDataOptions : NoDataOptions -> Json.Encode.Value

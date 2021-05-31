@@ -49,9 +49,9 @@ type ChartType
     = Line
     | Area
     | Bar
-    | Pie
+    | Pie (PieOptions {})
     | Donut
-    | RadialBar
+    | RadialBar (RadialBarOptions {})
 
 
 type alias LegendOptions =
@@ -114,6 +114,24 @@ type alias Point =
 type SeriesType
     = LineSeries
     | ColumnSeries
+
+
+type alias PieOptions a =
+    AnglesOptions a
+
+
+type alias RadialBarOptions a =
+    AnglesOptions a
+
+
+type alias AnglesOptions a =
+    { a
+        | angles :
+            Maybe
+                { from : Int
+                , to : Int
+                }
+    }
 
 
 defaultChart : ApexChart

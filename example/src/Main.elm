@@ -235,7 +235,6 @@ view { logins, stateReport } =
                     ]
             )
             [ class "col-span-1 md:col-span-2" ]
-            []
         , div [ class "flex flex-col items-center" ]
             [ div [ class "flex flex-col items-center justify-center w-56 h-56 bg-red-400 rounded-full" ]
                 [ h1 [ class "text-xl font-bold text-white" ] [ text "56 " ]
@@ -246,7 +245,6 @@ view { logins, stateReport } =
                     Charts.RoundChart.radialBar "Time boooked" [ ( "room 1", 80 ) ]
                 )
                 [ class "col-span-1" ]
-                []
             ]
-        , Apex.apexChart defaultChart [ class "col-span-1" ] []
+        , Apex.apexChart defaultChart [ class "col-span-1" ] 
         ]
