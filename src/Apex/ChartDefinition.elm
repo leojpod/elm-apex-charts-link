@@ -6,9 +6,9 @@ module Apex.ChartDefinition exposing
     , DataLabelOptions
     , GridOptions
     , LegendOptions
+    , MultiSeries
     , NoDataOptions
     , PairedSeries
-    , MultiSeries
     , Point
     , Series(..)
     , SeriesType(..)
@@ -125,7 +125,9 @@ type SeriesType
 
 
 type alias BarOptions =
-    { isHorizontal : Bool }
+    { isHorizontal : Bool
+    , isStacked : Bool
+    }
 
 
 type alias PieOptions a =

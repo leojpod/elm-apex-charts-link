@@ -207,6 +207,15 @@ encodeChartOptions { type_, toolbar, zoom } =
         , ( "toolbar", Encode.object [ ( "show", Encode.bool toolbar ) ] )
         , ( "zoom", Encode.object [ ( "enabled", Encode.bool zoom ) ] )
         , ( "type", encodeChartType type_ )
+        , ( "stacked"
+          , Encode.bool <|
+                case type_ of
+                    Bar { isStacked } ->
+                        isStacked
+
+                    _ ->
+                        False
+          )
         ]
 
 

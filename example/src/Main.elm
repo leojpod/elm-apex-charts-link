@@ -251,7 +251,10 @@ view { logins, stateReport } =
             , Apex.apexChart [ class "col-span-1" ] (
                 Apex.fromBarChart (
                     Bar.bar 
+                    |> Bar.addSeries "day time" [("abc", 10), ("def", 30), ("ghi", 2), ("jkl", 12)]
+                    |> Bar.addSeries "night time" [("abc", 1), ("def", 2.5), ("ghi", 20), ("jkl", 22)]
                     |> Bar.isHorizontal
+                    |> Bar.isStacked
                     )
                 )
         , Apex.apexChart [ class "col-span-2" ] defaultChart 

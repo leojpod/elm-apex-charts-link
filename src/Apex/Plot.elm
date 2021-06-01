@@ -27,7 +27,7 @@ toApex chart =
                                         ChartDefinition.Line
 
                                     ColumnSeries ->
-                                        ChartDefinition.Bar { isHorizontal = False }
+                                        ChartDefinition.Bar { isHorizontal = False, isStacked = False }
                             )
                         |> Maybe.withDefault ChartDefinition.Line
             }

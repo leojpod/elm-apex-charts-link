@@ -3,7 +3,7 @@ module Charts.Bar exposing
     , bar
     , addSeries
     , chartData
-    , isHorizontal
+    , isHorizontal, isStacked
     )
 
 {-| Use this module to build histograms with discrete scales or bar diagrams.
@@ -30,6 +30,9 @@ module Charts.Bar exposing
 
 -}
 
+import Dict exposing (Dict)
+import Maybe.Extra as Maybe
+
 
 {-| This is an internal type to make sure we're keeping the definitions and list handling coherent and free from outside manipulation
 -}
@@ -38,31 +41,35 @@ type Bar
 
 
 type alias BarChartData =
-    { series : List Series
+    { series : Series
+    , labels : List String
     , plotOptions : BarChartOptions
     }
 
 
 defaultBarChartData : BarChartData
 defaultBarChartData =
-    { series = []
+    { series = Dict.empty
+    , labels = []
     , plotOptions = defaultBarChartOptions
     }
 
 
 type alias Series =
-    { name : String
-    , data : List Float
-    }
+    Dict String (List Float)
 
 
 type alias BarChartOptions =
-    { isHorizontal : Bool }
+    { isHorizontal : Bool
+    , isStacked : Bool
+    }
 
 
 defaultBarChartOptions : BarChartOptions
 defaultBarChartOptions =
-    { isHorizontal = False }
+    { isHorizontal = False
+    , isStacked = False
+    }
 
 
 {-| This is the entry point to create a bar chart.
@@ -91,11 +98,36 @@ NOTE: it won't work well if your series have different length!
 (in a later release we might want to do something about that)
 
 -}
-addSeries : String -> List Float -> Bar -> Bar
+addSeries : String -> List ( String, Float ) -> Bar -> Bar
 addSeries name dataPoints (BarChart data) =
+    let
+        numberOfSeries =
+            data.series
+                |> Dict.toList
+                |> List.unzip
+                |> Tuple.second
+                |> List.head
+                |> Maybe.unwrap 0 List.length
+    in
     BarChart
         { data
-            | series = { name = name, data = dataPoints } :: data.series
+            | labels = name :: data.labels
+            , series =
+                dataPoints
+                    |> List.foldl
+                        (\( label, value ) ->
+                            Dict.update label
+                                (\maybeValues ->
+                                    Just <|
+                                        case maybeValues of
+                                            Nothing ->
+                                                value :: List.repeat numberOfSeries 0
+
+                                            Just values ->
+                                                value :: values
+                                )
+                        )
+                        data.series
         }
 
 
@@ -115,4 +147,14 @@ isHorizontal (BarChart ({ plotOptions } as data)) =
                 { plotOptions
                     | isHorizontal = True
                 }
+        }
+
+
+{-| by default, bar charts are not stacked but you can fix this easily
+-}
+isStacked : Bar -> Bar
+isStacked (BarChart ({ plotOptions } as data)) =
+    BarChart
+        { data
+            | plotOptions = { plotOptions | isStacked = True }
         }
