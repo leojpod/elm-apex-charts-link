@@ -1,9 +1,9 @@
 module Apex exposing
     ( fromPlotChart
     , fromRoundChart
+    , fromBarChart
     , encodeChart
     , apexChart
-    , fromBarChart
     )
 
 {-| This package provide a (WIP) integration between elm and [Apex charts](https://apexcharts.com/) via either custom-element or ports.
@@ -44,6 +44,8 @@ Once you have a Chart you can transform it into an Apex chart with one of these 
 @docs fromPlotChart
 
 @docs fromRoundChart
+
+@docs fromBarChart
 
 
 # Rendering charts

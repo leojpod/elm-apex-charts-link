@@ -34,6 +34,7 @@ More to come!
 
 @docs chartData
 @docs RoundChartType
+@docs RoundChartOptions
 
 -}
 
@@ -49,7 +50,11 @@ type RoundChartType
 -}
 type alias RoundChartOptions =
     { type_ : RoundChartType
-    , angles : Maybe { from : Int, to : Int }
+    , angles :
+        Maybe
+            { from : Int
+            , to : Int
+            }
     }
 
 
@@ -112,9 +117,14 @@ radialBar name series =
 {--Customizations --}
 
 
+{-| this allows to replace the usual "full circle"/360 degree representation by one of custom angles
+
+NOTE: angles are in degrees and 0 represent the top of the page (i.e. noon on an analog watch)
+
+-}
 withCustomAngles : Int -> Int -> RoundChart -> RoundChart
 withCustomAngles from to (RoundChart ({ chartOptions } as data)) =
     RoundChart
         { data
-            | chartOptions = { chartOptions | angles = Just { from = from, to = to} }
+            | chartOptions = { chartOptions | angles = Just { from = from, to = to } }
         }

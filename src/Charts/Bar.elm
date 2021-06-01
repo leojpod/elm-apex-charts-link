@@ -2,8 +2,9 @@ module Charts.Bar exposing
     ( Bar
     , bar
     , addSeries
+    , isHorizontal
+    , isStacked
     , chartData
-    , isHorizontal, isStacked
     )
 
 {-| Use this module to build histograms with discrete scales or bar diagrams.
@@ -22,6 +23,12 @@ module Charts.Bar exposing
 ## Adding data
 
 @docs addSeries
+
+
+## Customizations
+
+@docs isHorizontal
+@docs isStacked
 
 
 # Internals
