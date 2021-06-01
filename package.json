@@ -8,7 +8,7 @@
   ],
   "dependencies": {
     "@webcomponents/custom-elements": "^1.4.3",
-    "apexcharts": "^3.22.0"
+    "apexcharts": "^3.26.1"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^3.9.1",

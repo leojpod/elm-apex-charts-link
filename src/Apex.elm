@@ -1,11 +1,7 @@
 module Apex exposing
-    ( chart
-    , Point
-    , addLineSeries
-    , addColumnSeries
-    , withLegends
-    , withXAxisType
-    , XAxisType(..)
+    ( fromPlotChart
+    , fromRoundChart
+    , fromBarChart
     , encodeChart
     , apexChart
     )
@@ -19,17 +15,18 @@ Note, this package comes with an "already made" custom component which you can i
 Here is how you would describe a simple chart with some options (checkout the example project for more use-cases):
 
         import Apex
+        import Charts.PlotChart as Plot
 
         myChart : Html Msg
         myChart =
             Apex.apexChart
-                (Apex.chart
-                    |> Apex.addLineSeries "Connections by week" (connectionsByWeek logins)
-                    |> Apex.addColumnSeries "Connections within office hour for that week" (dayTimeConnectionByWeek logins)
-                    |> Apex.addColumnSeries "Connections outside office hour for that week" (outsideOfficeHourConnectionByWeek logins)
-                    |> Apex.withXAxisType Apex.DateTime
+                (Plot.plot
+                    |> Plot.addLineSeries "Connections by week" (connectionsByWeek logins)
+                    |> Plot.addColumnSeries "Connections within office hour for that week" (dayTimeConnectionByWeek logins)
+                    |> Plot.addColumnSeries "Connections outside office hour for that week" (outsideOfficeHourConnectionByWeek logins)
+                    |> Plot.withXAxisType Plot.DateTime
+                    |> Apex.fromPlotChart
                 )
-                []
                 []
 
 
@@ -40,30 +37,15 @@ For that please refer to the [README](./) page
 
 # Creating charts
 
+Creating charts is done by using the Charts modules ([PlotChart](./Charts-PlotChart) & [RoundChart](./Charts-RoundChart))
 
-# Entry point
+Once you have a Chart you can transform it into an Apex chart with one of these 2 function
 
-@docs chart
+@docs fromPlotChart
 
+@docs fromRoundChart
 
-## Adding data
-
-@docs Point
-
-@docs addLineSeries
-
-@docs addColumnSeries
-
-
-## Configuring the display
-
-@docs withLegends
-
-@docs withXAxisType
-
-@docs XAxisType
-
-NOTE: A lot more support for options and type of series needs to be added
+@docs fromBarChart
 
 
 # Rendering charts
@@ -84,12 +66,13 @@ update msg _ =
             ( logins
             , updateChart <|
                 Apex.encodeChart <|
-                    (Apex.chart
-                        |> Apex.addLineSeries "Connections by week" (connectionsByWeek logins)
-                        |> Apex.addColumnSeries "Connections within office hour for that week" (dayTimeConnectionByWeek logins)
-                        |> Apex.addColumnSeries "Connections outside office hour for that week" (outsideOfficeHourConnectionByWeek logins)
-                        |> Apex.withXAxisType Apex.DateTime
-                    )
+                    Apex.fromPlotChart <|
+                        (Chart.PlotChart.chart
+                            |> Chart.PlotChart.addLineSeries "Connections by week" (connectionsByWeek logins)
+                            |> Chart.PlotChart.addColumnSeries "Connections within office hour for that week" (dayTimeConnectionByWeek logins)
+                            |> Chart.PlotChart.addColumnSeries "Connections outside office hour for that week" (outsideOfficeHourConnectionByWeek logins)
+                            |> Chart.PlotChart.withXAxisType Chart.DateTime
+                        )
             )
 ```
 
@@ -112,216 +95,78 @@ app.ports.updateChart.subscribe((chartDescription) => {
          myChart : Html Msg
          myChart =
              Apex.apexChart
-                 (Apex.chart
-                     |> Apex.addLineSeries "Connections by week" (connectionsByWeek logins)
-                     |> Apex.addColumnSeries "Connections within office hour for that week" (dayTimeConnectionByWeek logins)
-                     |> Apex.addColumnSeries "Connections outside office hour for that week" (outsideOfficeHourConnectionByWeek logins)
-                     |> Apex.withXAxisType Apex.DateTime
+                 (Chart.PlotChart.chart
+                    |> Chart.PlotChart.addLineSeries "Connections by week" (connectionsByWeek logins)
+                    |> Chart.PlotChart.addColumnSeries "Connections within office hour for that week" (dayTimeConnectionByWeek logins)
+                    |> Chart.PlotChart.addColumnSeries "Connections outside office hour for that week" (outsideOfficeHourConnectionByWeek logins)
+                    |> Chart.PlotChart.withXAxisType Apex.DateTime
+                    |> Apex.fromPlotChart
                  )
-                 []
                  []
 
 @docs apexChart
 
 -}
 
+import Apex.Bar
+import Apex.ChartDefinition
+    exposing
+        ( ApexChart
+        , ChartOptions
+        , ChartType(..)
+        , CurveType(..)
+        , DataLabelOptions
+        , GridOptions
+        , LegendOptions
+        , MultiSeries
+        , NoDataOptions
+        , PairedSeries
+        , Point
+        , Series(..)
+        , SeriesType(..)
+        , StrokeOptions
+        , XAxisOptions
+        , XAxisType(..)
+        )
+import Apex.Plot
+import Apex.RoundChart
+import Charts.Bar exposing (Bar)
+import Charts.Plot exposing (Plot)
+import Charts.RoundChart exposing (RoundChart)
 import Html exposing (Html)
 import Html.Attributes
-import Json.Encode
-
-
-{-| this is the custom element wrapper.
-Make sure that you have installed the javascript companion package (`npm i elm-apex-charts-link`) before using this function!
--}
-apexChart : Chart -> List (Html.Attribute msg) -> List (Html msg) -> Html msg
-apexChart aChart extraAttributes =
-    Html.node "apex-chart"
-        ((Html.Attributes.property "data" <|
-            encodeChart aChart
-         )
-            :: extraAttributes
-        )
-
-
-{-| A simple record type to make things a bit clearer when writing series
--}
-type alias Point =
-    { x : Float
-    , y : Float
-    }
+import Json.Encode as Encode
 
 
 {-| This is an internal type to make sure we're keeping the definitions and list handling coherent and free from outside manipulation
 -}
 type Chart
-    = Chart ChartSeries Options
+    = Chart ApexChart
 
 
-{-| might be over zealous on the alias type but well...
+{-| One you have a nice plot chart reprensentation from [`Charts.Plot`](./Charts-Plot) you can transform it to an Apex chart by calling this function
 -}
-type alias ChartSeries =
-    List Series
+fromPlotChart : Plot -> Chart
+fromPlotChart =
+    Apex.Plot.toApex >> Chart
 
 
-{-| there are 2 main types of series:
-
-  - single point: for pie charts, radar charts and the like of them
-  - paired point: for column, line, area, anything else really
-
+{-| One you have a nice bar chart reprensentation from [`Charts.Bar`](./Charts-Bar) you can transform it to an Apex chart by calling this function
 -}
-type Series
-    = Single String SingleSeriesData
-    | Paired String PairedSeriesType PairedSeriesData
+fromBarChart : Bar -> Chart
+fromBarChart =
+    Apex.Bar.toApex >> Chart
 
 
-type alias SingleSeriesData =
-    List Float
-
-
-type alias PairedSeriesData =
-    List Point
-
-
-type PairedSeriesType
-    = Lines
-    | Columns
-
-
-type alias Options =
-    { --| note this will change to a real type
-      noData : String
-    , chart : ChartOptions
-
-    --| note this will change to a real type
-    , dataLabels : Bool
-    , stroke : StokeOptions
-    , grid : GridOptions
-    , legend : LegendOptions
-    , xAxis : XAxisOptions
-    }
-
-
-defaultOptions : Options
-defaultOptions =
-    { noData = "loading ..."
-    , chart = defaultChartOptions
-    , dataLabels = False
-    , stroke = defaultStrokeOptions
-    , grid = defaultGridOptions
-    , legend = defaultLegendOptions
-    , xAxis = defaultXAxisOptions
-    }
-
-
-type alias ChartOptions =
-    { type_ : Maybe String
-    , toolbar : Bool
-    , zoom : Bool
-    }
-
-
-defaultChartOptions : ChartOptions
-defaultChartOptions =
-    { type_ = Nothing
-    , toolbar = False
-    , zoom = False
-    }
-
-
-type alias StokeOptions =
-    { curve : String
-    , show : Bool
-    , width : Int
-    }
-
-
-defaultStrokeOptions : StokeOptions
-defaultStrokeOptions =
-    { curve = "smooth"
-    , show = True
-    , width = 2
-    }
-
-
-type alias GridOptions =
-    Bool
-
-
-defaultGridOptions : GridOptions
-defaultGridOptions =
-    False
-
-
-type alias LegendOptions =
-    Bool
-
-
-defaultLegendOptions : GridOptions
-defaultLegendOptions =
-    False
-
-
-type alias XAxisOptions =
-    XAxisType
-
-
-{-| Describe how the x-axis of your graph should be labelled.
-
-It can be either a Category, a DateTime or a Numeric value
-
-NOTE: for the DateTime to properly work I suggest that the x-values in your series should be turned into miliseconds via `Time.posixToMillis`. I hope to find something better in due time but that's the best option until then.
-
+{-| One you have a nice pie/radial chart reprensentation from [`Charts.RoundChart`](./Charts-RoundChart) you can transform it to an Apex chart by calling this function
 -}
-type XAxisType
-    = Category
-    | DateTime
-    | Numeric
+fromRoundChart : RoundChart -> Chart
+fromRoundChart =
+    Apex.RoundChart.toApex >> Chart
 
 
-defaultXAxisOptions : XAxisOptions
-defaultXAxisOptions =
-    defaultXAxisType
 
-
-defaultXAxisType : XAxisType
-defaultXAxisType =
-    Numeric
-
-
-{-| this is the entry point of any chart: it gives you an empty chart with some default options
--}
-chart : Chart
-chart =
-    Chart []
-        defaultOptions
-
-
-{-| as the name suggest, this add a line to your chart by creating a series with the given name and by linking the given points together.
--}
-addLineSeries : String -> List Point -> Chart -> Chart
-addLineSeries name series (Chart allSeries options) =
-    Chart (Paired name Lines series :: allSeries) options
-
-
-{-| as the name suggest, this add a new column series to your chart using the given name and by adding a bar for each of the given points.
--}
-addColumnSeries : String -> List Point -> Chart -> Chart
-addColumnSeries name series (Chart allSeries options) =
-    Chart (Paired name Columns series :: allSeries) options
-
-
-{-| Allow to turn on or off the legend for the graph
--}
-withLegends : Bool -> Chart -> Chart
-withLegends bool (Chart allSeries options) =
-    Chart allSeries { options | legend = bool }
-
-
-{-| change the type of x-axis used in you graph
--}
-withXAxisType : XAxisType -> Chart -> Chart
-withXAxisType type_ (Chart allSeries options) =
-    Chart allSeries { options | xAxis = type_ }
+{--_Encoding part --}
 
 
 {-| this function takes a chart and turns it into JSON data that Apex Charts can understand
@@ -329,104 +174,220 @@ withXAxisType type_ (Chart allSeries options) =
 NOTE: if you are using the custom-element version you should not need to use this function
 
 -}
-encodeChart : Chart -> Json.Encode.Value
-encodeChart (Chart allSeries options) =
-    Json.Encode.object
-        [ ( "series"
-          , Json.Encode.list encodeSeries allSeries
+encodeChart : Chart -> Encode.Value
+encodeChart (Chart chart) =
+    encodeApexChart chart
+
+
+encodeApexChart : ApexChart -> Encode.Value
+encodeApexChart { chart, legend, noData, dataLabels, labels, stroke, grid, xAxis, series } =
+    Encode.object <|
+        [ ( "chart", encodeChartOptions chart )
+        , ( "legend", encodeLegendOptions legend )
+        , ( "noData", encodeNoDataOptions noData )
+        , ( "dataLabels", encodeDataLabelsOptions dataLabels )
+        , ( "stroke", encodeStrokeOptions stroke )
+        , ( "grid", encodeGridOptions grid )
+        , ( "series", encodeSeries series )
+        ]
+            ++ List.filterMap identity
+                [ xAxis |> Maybe.map (\xaxisOptions -> ( "xaxis", encodeXAxisOptions xaxisOptions ))
+                , labels |> Maybe.map (\labelsValues -> ( "labels", Encode.list Encode.string labelsValues ))
+                , encodePlotOptions chart.type_ |> Maybe.map (Tuple.pair "plotOptions")
+                ]
+
+
+encodeLegendOptions : LegendOptions -> Encode.Value
+encodeLegendOptions show =
+    Encode.object [ ( "show", Encode.bool show ) ]
+
+
+encodeChartOptions : ChartOptions -> Encode.Value
+encodeChartOptions { type_, toolbar, zoom } =
+    Encode.object
+        [ ( "width", Encode.string "100%" )
+        , ( "toolbar", Encode.object [ ( "show", Encode.bool toolbar ) ] )
+        , ( "zoom", Encode.object [ ( "enabled", Encode.bool zoom ) ] )
+        , ( "type", encodeChartType type_ )
+        , ( "stacked"
+          , Encode.bool <|
+                case type_ of
+                    Bar { isStacked } ->
+                        isStacked
+
+                    _ ->
+                        False
           )
-        , ( "noData", Json.Encode.object [ ( "text", Json.Encode.string options.noData ) ] )
-        , ( "chart"
-          , encodeChartOptions options.chart
-          )
-        , ( "dataLabels", Json.Encode.object [ ( "enabled", Json.Encode.bool options.dataLabels ) ] )
-        , ( "stroke", encodeStrokeOptions options.stroke )
-        , ( "grid", encodeGridOptions options.grid )
-        , ( "legend", encodeLegendOptions options.legend )
-        , ( "xaxis", encodeXAxisOptions options.xAxis )
         ]
 
 
-encodeSeries : Series -> Json.Encode.Value
-encodeSeries series =
-    case series of
-        Single name data ->
-            Json.Encode.object
-                [ ( "name", Json.Encode.string name )
-                , ( "data"
-                  , Json.Encode.list Json.Encode.float data
-                  )
-                ]
+encodeChartType : ChartType -> Encode.Value
+encodeChartType type_ =
+    Encode.string <|
+        case type_ of
+            Line ->
+                "line"
 
-        Paired name type_ dataPoints ->
-            Json.Encode.object
-                [ ( "name", Json.Encode.string name )
-                , ( "type"
-                  , case type_ of
-                        Lines ->
-                            Json.Encode.string "line"
+            Area ->
+                "area"
 
-                        Columns ->
-                            Json.Encode.string "column"
-                  )
-                , ( "data"
-                  , Json.Encode.list encodePoint dataPoints
-                  )
-                ]
+            Bar _ ->
+                "bar"
+
+            Pie _ ->
+                "pie"
+
+            Donut ->
+                "donut"
+
+            RadialBar _ ->
+                "radialBar"
 
 
-encodePoint : Point -> Json.Encode.Value
-encodePoint { x, y } =
-    Json.Encode.object [ ( "x", Json.Encode.float x ), ( "y", Json.Encode.float y ) ]
+encodePlotOptions : ChartType -> Maybe Encode.Value
+encodePlotOptions type_ =
+    case type_ of
+        Line ->
+            Nothing
+
+        Area ->
+            Nothing
+
+        Bar { isHorizontal } ->
+            Just <|
+                Encode.object
+                    [ ( "bar"
+                      , Encode.object [ ( "horizontal", Encode.bool isHorizontal ) ]
+                      )
+                    ]
+
+        Pie { angles } ->
+            angles
+                |> Maybe.map
+                    (\{ from, to } ->
+                        Encode.object
+                            [ ( "pie"
+                              , Encode.object
+                                    [ ( "startAngle", Encode.int from )
+                                    , ( "endAngle", Encode.int to )
+                                    ]
+                              )
+                            ]
+                    )
+
+        Donut ->
+            Nothing
+
+        RadialBar { angles } ->
+            angles
+                |> Maybe.map
+                    (\{ from, to } ->
+                        Encode.object
+                            [ ( "radialBar"
+                              , Encode.object
+                                    [ ( "startAngle", Encode.int from )
+                                    , ( "endAngle", Encode.int to )
+                                    ]
+                              )
+                            ]
+                    )
 
 
-encodeStrokeOptions : StokeOptions -> Json.Encode.Value
+encodeNoDataOptions : NoDataOptions -> Encode.Value
+encodeNoDataOptions text =
+    Encode.object [ ( "text", Encode.string text ) ]
+
+
+encodeDataLabelsOptions : DataLabelOptions -> Encode.Value
+encodeDataLabelsOptions dataLabelsEnabled =
+    Encode.object [ ( "enabled", Encode.bool dataLabelsEnabled ) ]
+
+
+encodeStrokeOptions : StrokeOptions -> Encode.Value
 encodeStrokeOptions { curve, show, width } =
-    Json.Encode.object
-        [ ( "curve", Json.Encode.string curve )
-        , ( "show", Json.Encode.bool show )
-        , ( "width", Json.Encode.int width )
+    Encode.object
+        [ ( "curve"
+          , Encode.string <|
+                case curve of
+                    Smooth ->
+                        "smooth"
+
+                    Strait ->
+                        "strait"
+
+                    Stepline ->
+                        "stepline"
+          )
+        , ( "show", Encode.bool show )
+        , ( "width", Encode.int width )
         ]
 
 
-encodeGridOptions : GridOptions -> Json.Encode.Value
+encodeGridOptions : GridOptions -> Encode.Value
 encodeGridOptions show =
     if show then
-        Json.Encode.object []
+        Encode.object []
 
     else
-        Json.Encode.object
-            [ ( "show", Json.Encode.bool False )
+        Encode.object
+            [ ( "show", Encode.bool False )
             , ( "padding"
-              , Json.Encode.object
-                    [ ( "left", Json.Encode.int 0 )
-                    , ( "right", Json.Encode.int 0 )
-                    , ( "top", Json.Encode.int 0 )
+              , Encode.object
+                    [ ( "left", Encode.int 0 )
+                    , ( "right", Encode.int 0 )
+                    , ( "top", Encode.int 0 )
                     ]
               )
             ]
 
 
-encodeLegendOptions : LegendOptions -> Json.Encode.Value
-encodeLegendOptions show =
-    Json.Encode.object [ ( "show", Json.Encode.bool show ) ]
+encodeSeries : Series -> Encode.Value
+encodeSeries series =
+    case series of
+        SingleValueSeries values ->
+            Encode.list Encode.float values
+
+        MultiValuesSeries multiSeries ->
+            Encode.list encodeMultiSeries multiSeries
+
+        PairedValuesSeries pairedSeries ->
+            Encode.list encodePairedSeries pairedSeries
 
 
-encodeChartOptions : ChartOptions -> Json.Encode.Value
-encodeChartOptions { type_, toolbar, zoom } =
-    Json.Encode.object
-        [ ( "width", Json.Encode.string "100%" )
-        , ( "type", type_ |> Maybe.withDefault "line" |> Json.Encode.string )
-        , ( "toolbar", Json.Encode.object [ ( "show", Json.Encode.bool toolbar ) ] )
-        , ( "zoom", Json.Encode.object [ ( "enabled", Json.Encode.bool zoom ) ] )
+encodeMultiSeries : MultiSeries -> Encode.Value
+encodeMultiSeries { name, data } =
+    Encode.object [ ( "name", Encode.string name ), ( "data", Encode.list Encode.float data ) ]
+
+
+encodePairedSeries : PairedSeries -> Encode.Value
+encodePairedSeries { data, name, type_ } =
+    Encode.object <|
+        [ ( "name", Encode.string name )
+        , ( "type"
+          , Encode.string <|
+                case type_ of
+                    LineSeries ->
+                        "line"
+
+                    ColumnSeries ->
+                        "column"
+          )
+        , ( "data"
+          , Encode.list encodePoint data
+          )
         ]
 
 
-encodeXAxisOptions : XAxisOptions -> Json.Encode.Value
+encodePoint : Point -> Encode.Value
+encodePoint { x, y } =
+    Encode.object [ ( "x", Encode.float x ), ( "y", Encode.float y ) ]
+
+
+encodeXAxisOptions : XAxisOptions -> Encode.Value
 encodeXAxisOptions type_ =
-    Json.Encode.object
+    Encode.object
         [ ( "type"
-          , Json.Encode.string <|
+          , Encode.string <|
                 case type_ of
                     Category ->
                         "category"
@@ -438,3 +399,21 @@ encodeXAxisOptions type_ =
                         "numeric"
           )
         ]
+
+
+
+{--Interop area --}
+
+
+{-| this is the custom element wrapper.
+Make sure that you have installed the javascript companion package (`npm i elm-apex-charts-link`) before using this function!
+-}
+apexChart : List (Html.Attribute msg) -> Chart -> Html msg
+apexChart extraAttributes aChart =
+    Html.node "apex-chart"
+        ((Html.Attributes.property "data" <|
+            encodeChart aChart
+         )
+            :: extraAttributes
+        )
+        []
