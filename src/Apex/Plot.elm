@@ -1,4 +1,4 @@
-module Apex.PlotChart exposing (toApex)
+module Apex.Plot exposing (toApex)
 
 import Apex.ChartDefinition as ChartDefinition exposing (ApexChart, Series(..), defaultChart, defaultChartOptions)
 import Charts.Plot exposing (Plot, SeriesType(..), XAxisOptions, XAxisType(..))
@@ -8,7 +8,7 @@ toApex : Plot -> ApexChart
 toApex chart =
     let
         { series, plotOptions } =
-            Charts.PlotChart.chartData chart
+            Charts.Plot.chartData chart
 
         { xAxis } =
             plotOptions
@@ -27,7 +27,7 @@ toApex chart =
                                         ChartDefinition.Line
 
                                     ColumnSeries ->
-                                        ChartDefinition.Bar
+                                        ChartDefinition.Bar { isHorizontal = False }
                             )
                         |> Maybe.withDefault ChartDefinition.Line
             }
@@ -41,7 +41,7 @@ toApex chart =
                         , data = data
                         }
                     )
-                |> PairedValueSeries
+                |> PairedValuesSeries
     }
 
 

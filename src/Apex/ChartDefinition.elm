@@ -8,6 +8,7 @@ module Apex.ChartDefinition exposing
     , LegendOptions
     , NoDataOptions
     , PairedSeries
+    , MultiSeries
     , Point
     , Series(..)
     , SeriesType(..)
@@ -48,7 +49,7 @@ type alias ChartOptions =
 type ChartType
     = Line
     | Area
-    | Bar
+    | Bar BarOptions
     | Pie (PieOptions {})
     | Donut
     | RadialBar (RadialBarOptions {})
@@ -100,9 +101,16 @@ type alias PairedSeries =
     }
 
 
+type alias MultiSeries =
+    { name : String
+    , data : List Float
+    }
+
+
 type Series
     = SingleValueSeries (List Float)
-    | PairedValueSeries (List PairedSeries)
+    | MultiValuesSeries (List MultiSeries)
+    | PairedValuesSeries (List PairedSeries)
 
 
 type alias Point =
@@ -114,6 +122,10 @@ type alias Point =
 type SeriesType
     = LineSeries
     | ColumnSeries
+
+
+type alias BarOptions =
+    { isHorizontal : Bool }
 
 
 type alias PieOptions a =
@@ -144,7 +156,7 @@ defaultChart =
     , stroke = defaultStrokeOptions
     , grid = defaultGridOptions
     , xAxis = Nothing
-    , series = PairedValueSeries []
+    , series = PairedValuesSeries []
     }
 
 

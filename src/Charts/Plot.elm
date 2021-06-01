@@ -182,7 +182,7 @@ mapPlotOption fct (PlotChart data) =
 
 {-| This is the entry point to create a plot chart.
 
-It creates an empty chart which you can use as basis, adding series to it, tuning axis and such ..
+It creates an empty chart which you can use as basis, adding series to it, tuning axis and such...
 
 -}
 plot : Plot

@@ -2,7 +2,8 @@ port module Main exposing (main)
 
 import Apex
 import Browser
-import Charts.PlotChart as Plot
+import Charts.Plot as Plot
+import Charts.Bar as Bar
 import Charts.RoundChart as RoundChart
 import FakeData
 import Html exposing (Html, div, h1, text)
@@ -247,5 +248,11 @@ view { logins, stateReport } =
                     |> RoundChart.withCustomAngles -90 90
                 ))
             ]
-        , Apex.apexChart [ class "col-span-1" ] defaultChart 
+            , Apex.apexChart [ class "col-span-1" ] (
+                Apex.fromBarChart (
+                    Bar.bar 
+                    |> Bar.isHorizontal
+                    )
+                )
+        , Apex.apexChart [ class "col-span-2" ] defaultChart 
         ]
