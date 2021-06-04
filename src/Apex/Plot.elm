@@ -34,6 +34,7 @@ toApex chart =
         , xAxis = Just <| toXAxisApexOptions xAxis
         , series =
             series
+                |> List.reverse
                 |> List.map
                     (\{ name, type_, data } ->
                         { name = name

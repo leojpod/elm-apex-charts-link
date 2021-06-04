@@ -112,6 +112,7 @@ update msg model =
                         |> Plot.addColumnSeries "Time used" (usagesByMonth usages)
                         |> Plot.withXAxisType Plot.DateTime
                         |> Apex.fromPlotChart
+                        |> Apex.withColors ["#5C4742"]
                     )
             )
 
@@ -224,17 +225,19 @@ view { logins, stateReport } =
                 |> Plot.addColumnSeries "Connections outside office hour for that week" (outsideOfficeHourConnectionByWeek logins)
                 |> Plot.withXAxisType Plot.DateTime
                 |> Apex.fromPlotChart
+                |> Apex.withColors ["#ff2E9B", "#3f51b5", "#7700D0"]
     in
     div [ class "p-1 grid grid-cols-1 gap-4 md:grid-cols-3" ]
         [ div [ id "chart1", class "col-span-1 md:col-span-3" ] [ div [] [] ]
         , Apex.apexChart
             [ class "col-span-1 md:col-span-2" ]
-            (Apex.fromRoundChart <|
-                RoundChart.pieChart "State"
+            ( RoundChart.pieChart "State"
                     [ ( "working", stateReport.working |> toFloat )
                     , ( "meeh", stateReport.meeh |> toFloat )
                     , ( "not working", stateReport.notWorking |> toFloat )
                     ]
+                    |> Apex.fromRoundChart 
+                    |> Apex.withColors ["#1B998B", "#E2C044", "#D7263D"]
             )
         , div [ class "flex flex-col items-center" ]
             [ div [ class "flex flex-col items-center justify-center w-56 h-56 bg-red-400 rounded-full" ]
@@ -243,19 +246,20 @@ view { logins, stateReport } =
                 ]
             , Apex.apexChart
                 [ class "col-span-1" ]
-                ( Apex.fromRoundChart (
+                ( 
                     RoundChart.radialBar "Time boooked" [ ( "room 1", 80 ) ]
                     |> RoundChart.withCustomAngles -90 90
-                ))
+                    |> Apex.fromRoundChart 
+                    |> Apex.withColors ["#A300D6"])
             ]
             , Apex.apexChart [ class "col-span-1" ] (
-                Apex.fromBarChart (
                     Bar.bar 
                     |> Bar.addSeries "day time" [("abc", 10), ("def", 30), ("ghi", 2), ("jkl", 12)]
                     |> Bar.addSeries "night time" [("abc", 1), ("def", 2.5), ("ghi", 20), ("jkl", 22)]
                     |> Bar.isHorizontal
                     |> Bar.isStacked
-                    )
+                    |> Apex.fromBarChart 
+                    |> Apex.withColors ["#00B1F2", "#546E7A", "#F86624", "#E2C044"]
                 )
         , Apex.apexChart [ class "col-span-2" ] defaultChart 
         ]

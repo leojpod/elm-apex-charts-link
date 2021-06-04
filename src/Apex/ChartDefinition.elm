@@ -36,6 +36,7 @@ type alias ApexChart =
     , grid : GridOptions
     , xAxis : Maybe XAxisOptions
     , series : Series
+    , colors : List String
     }
 
 
@@ -159,6 +160,7 @@ defaultChart =
     , grid = defaultGridOptions
     , xAxis = Nothing
     , series = PairedValuesSeries []
+    , colors = []
     }
 
 
