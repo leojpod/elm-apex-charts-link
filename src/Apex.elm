@@ -4,6 +4,7 @@ module Apex exposing
     , fromBarChart
     , encodeChart
     , apexChart
+    , withColors
     )
 
 {-| This package provide a (WIP) integration between elm and [Apex charts](https://apexcharts.com/) via either custom-element or ports.
@@ -128,6 +129,7 @@ import Apex.ChartDefinition
         , XAxisOptions
         , XAxisType(..)
         )
+import Apex.Options
 import Apex.Plot
 import Apex.RoundChart
 import Charts.Bar exposing (Bar)
@@ -166,6 +168,18 @@ fromRoundChart =
 
 
 
+{--Customization area --}
+
+
+{-| this allows you to set the theme of the chart.
+it's mostly just setting the [`colors`](https://apexcharts.com/docs/options/colors/) value from Apex
+-}
+withColors : List String -> Chart -> Chart
+withColors colors (Chart chart) =
+    Chart <| Apex.Options.withColors colors chart
+
+
+
 {--_Encoding part --}
 
 
@@ -180,7 +194,7 @@ encodeChart (Chart chart) =
 
 
 encodeApexChart : ApexChart -> Encode.Value
-encodeApexChart { chart, legend, noData, dataLabels, labels, stroke, grid, xAxis, series } =
+encodeApexChart { chart, legend, noData, dataLabels, labels, stroke, grid, xAxis, series, colors } =
     Encode.object <|
         [ ( "chart", encodeChartOptions chart )
         , ( "legend", encodeLegendOptions legend )
@@ -194,6 +208,11 @@ encodeApexChart { chart, legend, noData, dataLabels, labels, stroke, grid, xAxis
                 [ xAxis |> Maybe.map (\xaxisOptions -> ( "xaxis", encodeXAxisOptions xaxisOptions ))
                 , labels |> Maybe.map (\labelsValues -> ( "labels", Encode.list Encode.string labelsValues ))
                 , encodePlotOptions chart.type_ |> Maybe.map (Tuple.pair "plotOptions")
+                , if List.isEmpty colors then
+                    Nothing
+
+                  else
+                    Just ( "colors", Encode.list Encode.string colors )
                 ]
 
 
