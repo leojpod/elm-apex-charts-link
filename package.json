@@ -2,9 +2,9 @@
   "name": "elm-apex-charts-link",
   "version": "1.0.3",
   "description": "write your charts specifications in elm, export to json and use it via ports or web-components",
-  "main": "./src/apex-chart-element.js",
+  "main": "src/apex-chart-element.js",
   "files": [
-    "./src/*.js"
+    "src/*.js"
   ],
   "dependencies": {
     "@webcomponents/custom-elements": "^1.4.3",
