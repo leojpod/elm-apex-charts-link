@@ -4,9 +4,9 @@ name: CI
 # events but only for the master branch
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -24,9 +24,10 @@ jobs:
       - name: Build the example
         run: |
           cd example
+          rm -rf .dist node_modules
           npm i
           npm run build
- 
+
       # Deploy the example to github page
       - name: GitHub Pages action
         uses: peaceiris/actions-gh-pages@v3.7.3

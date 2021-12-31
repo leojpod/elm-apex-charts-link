@@ -7,3 +7,4 @@ repl-temp-*
 node_modules/
 .DS_Store
 yarn.lock
+example/src/style.css
