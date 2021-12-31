@@ -5,7 +5,7 @@ module Apex exposing
     , withColors
     , encodeChart
     , apexChart
-    , hardCodedVersionV2
+    , hardCodedVersionV3
     )
 
 {-| This package provide a (WIP) integration between elm and [Apex charts](https://apexcharts.com/) via either custom-element or ports.
@@ -97,7 +97,7 @@ app.ports.updateChart.subscribe((chartDescription) => {
 Parts of the package depends on a node package for the custom-element.
 Hence the use of this silly value...
 
-@docs hardCodedVersionV2
+@docs hardCodedVersionV3
 ```
 
 @docs encodeChart
@@ -454,6 +454,6 @@ apexChart extraAttributes aChart =
 {-| the companion package changed!
 so let's try to tell the compiler that a version bump is required
 -}
-hardCodedVersionV2 : ()
-hardCodedVersionV2 =
+hardCodedVersionV3 : ()
+hardCodedVersionV3 =
     ()
