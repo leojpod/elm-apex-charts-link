@@ -3,7 +3,7 @@
     "name": "leojpod/elm-apex-charts-link",
     "summary": "describe your apex charts in elm to use via ports/web-components",
     "license": "MIT",
-    "version": "2.1.0",
+    "version": "2.2.0",
     "exposed-modules": [
         "Apex",
         "Charts.Plot",

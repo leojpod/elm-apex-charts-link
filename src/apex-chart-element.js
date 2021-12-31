@@ -4,28 +4,42 @@ import ApexCharts from 'apexcharts/dist/apexcharts.common'
 export class ApexChartElement extends HTMLElement {
   constructor () {
     super()
-    this.chart = null
+    this._chart = null
     this._data = null
   }
 
   connectedCallback () {
-    const data = this.data
+    const data = this._data
+    this.createChart(data)
+  }
+
+  createChart (data) {
+    // clear up the space first
+    while (this.firstChild) {
+      this.removeChild(this.firstChild)
+    }
+    // create the chart element holder
     const chartElement = document.createElement('div')
+    // add it
     this.appendChild(chartElement)
-    this.chart = new ApexCharts(chartElement, data)
-    this.chart.render()
+    // create the chart in the holder
+    this._chart = new ApexCharts(chartElement, data)
+    // render it
+    this._chart.render()
   }
 
   // to avoid useless encoding - decoding we'll use props to move things around
   // this means that to detect changes we'll transform the prop into a function via the setter
-  set data (newValue) {
+  set chartData (newValue) {
     this._data = newValue
-    if (this.chart) {
-      this.chart.updateSeries(newValue.series)
+    if (this._chart) {
+      this._chart.updateSeries(newValue.series)
+    } else {
+      this.createChart(newValue)
     }
   }
 
-  get data () {
+  get chartData () {
     return this._data
   }
 
@@ -38,4 +52,5 @@ export class ApexChartElement extends HTMLElement {
 
   disconnectCallback () {}
 }
+
 customElements.define('apex-chart', ApexChartElement)

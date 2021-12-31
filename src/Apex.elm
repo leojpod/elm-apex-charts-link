@@ -5,6 +5,7 @@ module Apex exposing
     , withColors
     , encodeChart
     , apexChart
+    , hardCodedVersionV2
     )
 
 {-| This package provide a (WIP) integration between elm and [Apex charts](https://apexcharts.com/) via either custom-element or ports.
@@ -89,6 +90,14 @@ app.ports.updateChart.subscribe((chartDescription) => {
   )
   chart.render()
 })
+
+
+# Note
+
+Parts of the package depends on a node package for the custom-element.
+Hence the use of this silly value...
+
+@docs hardCodedVersionV2
 ```
 
 @docs encodeChart
@@ -434,9 +443,17 @@ Make sure that you have installed the javascript companion package (`npm i elm-a
 apexChart : List (Html.Attribute msg) -> Chart -> Html msg
 apexChart extraAttributes aChart =
     Html.node "apex-chart"
-        ((Html.Attributes.property "data" <|
+        ((Html.Attributes.property "chartData" <|
             encodeChart aChart
          )
             :: extraAttributes
         )
         []
+
+
+{-| the companion package changed!
+so let's try to tell the compiler that a version bump is required
+-}
+hardCodedVersionV2 : ()
+hardCodedVersionV2 =
+    ()
