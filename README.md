@@ -51,4 +51,4 @@ The second part of this elm-package is actually language/framework agnostic.
 It is a custom element wrapping the apexcharts library as simply as possible.
 
 To use it, install and import the npm package `apexcharts-custom-element` and voilà. You should now be able to create a custom-element named `apex-chart` which will take the apexcharts definition in the `chartData` property.
-There might be an alternative support soon for an attribute alternative (which would require JSON serialization).
+If your framework/environment does not allow you to work easily with properties, you can instead use the attribute `data-chart` (with JSON encoding) which will work just the same.

@@ -9,7 +9,13 @@ export class ApexChartElement extends HTMLElement {
   }
 
   connectedCallback () {
-    const data = this._data
+    // first  check if the property is set
+    let data = this._data
+    if (!data) {
+      // if the property is not set, use the attribute: 'data-chart'
+      data = JSON.parse(this.getAttribute('data-chart'))
+      console.log('ApexChartElement data-chart attribute? ', data)
+    }
     this.createChart(data)
   }
 
@@ -28,8 +34,6 @@ export class ApexChartElement extends HTMLElement {
     this._chart.render()
   }
 
-  // to avoid useless encoding - decoding we'll use props to move things around
-  // this means that to detect changes we'll transform the prop into a function via the setter
   set chartData (newValue) {
     this._data = newValue
     if (this._chart) {
@@ -41,13 +45,6 @@ export class ApexChartElement extends HTMLElement {
 
   get chartData () {
     return this._data
-  }
-
-  /**
-   * override this function is you need something a bit more fancy like custom formatter and the like
-   **/
-  static optionTransformer (options) {
-    return options
   }
 
   disconnectCallback () {}
